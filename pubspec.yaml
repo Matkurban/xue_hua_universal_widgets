@@ -1,7 +1,8 @@
 name: xue_hua_universal_widgets
-description: "A new Flutter project."
+description: "xue_hua_universal_widgets."
 version: 0.0.1
-homepage:
+homepage: https://github.com/Matkurban
+repository: https://github.com/Matkurban/xue_hua_universal_widgets
 
 environment:
   sdk: ^3.13.0
@@ -10,8 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  intl: any
+  decimal: ^3.2.6
   material_ui: ^1.5.0
-  cupertino_ui: ^1.1.1
+
 
 dev_dependencies:
   flutter_test:
