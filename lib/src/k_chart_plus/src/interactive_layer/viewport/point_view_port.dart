@@ -168,9 +168,4 @@ class PointViewPort extends ChangeNotifier {
     _selectX = 0.0;
     if (changed) notifyListeners();
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }

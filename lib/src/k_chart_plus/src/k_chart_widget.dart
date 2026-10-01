@@ -6,8 +6,8 @@ import '../k_chart_plus.dart';
 import 'renderer/base_dimension.dart';
 
 class TimeFormat {
-  static const List<String> YEAR_MONTH_DAY = [yyyy, '-', mm, '-', dd];
-  static const List<String> YEAR_MONTH_DAY_WITH_HOUR = [
+  static const List<String> yearMonthDay = [yyyy, '-', mm, '-', dd];
+  static const List<String> yearMonthDayWithHour = [
     yyyy,
     '-',
     mm,
@@ -51,10 +51,11 @@ class KChartWidget extends StatefulWidget {
   /// `scaleX = 1.0` with no pan and no crosshair.
   final InteractiveLayerController? controller;
 
-  KChartWidget(
+  const KChartWidget(
     this.datas,
     this.chartStyle,
     this.chartColors, {
+    super.key,
     this.detailBuilder,
     this.controller,
     this.xFrontPadding = 100,
@@ -64,14 +65,14 @@ class KChartWidget extends StatefulWidget {
     this.isLine = false,
     this.hideGrid = false,
     this.showNowPrice = true,
-    this.timeFormat = TimeFormat.YEAR_MONTH_DAY,
+    this.timeFormat = TimeFormat.yearMonthDay,
     this.fixedLength = 2,
     this.mBaseHeight = 360,
     this.mSecondaryHeight,
   });
 
   @override
-  _KChartWidgetState createState() => _KChartWidgetState();
+  State<KChartWidget> createState() => _KChartWidgetState();
 }
 
 class _KChartWidgetState extends State<KChartWidget>
@@ -80,7 +81,7 @@ class _KChartWidgetState extends State<KChartWidget>
       StreamController<InfoWindowEntity?>();
 
   /// Only created when the caller did not supply one.
-  late InteractiveLayerController _controller =
+  late final InteractiveLayerController _controller =
       widget.controller ?? InteractiveLayerController();
 
   @override
@@ -116,7 +117,7 @@ class _KChartWidgetState extends State<KChartWidget>
       secondaryIndicators: widget.secondaryIndicators,
       mainIndicators: widget.mainIndicators,
     );
-    final _painter = ChartPainter(
+    final painter = ChartPainter(
       widget.chartStyle,
       widget.chartColors,
       baseDimension: baseDimension,
@@ -161,7 +162,7 @@ class _KChartWidgetState extends State<KChartWidget>
           RepaintBoundary(
             child: CustomPaint(
               size: Size(double.infinity, baseDimension.mDisplayHeight),
-              painter: _painter,
+              painter: painter,
             ),
           ),
           if (widget.detailBuilder != null) _buildInfoDialog(),

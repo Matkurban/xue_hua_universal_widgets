@@ -2,7 +2,7 @@ import '../entity/index.dart';
 import '../indicator/indicator_template.dart';
 
 class DataUtil {
-  static calculateAll(
+  static void calculateAll(
     List<KLineEntity> dataList,
     List<MainIndicator> mainLi,
     List<SecondaryIndicator> secondaryLi,
@@ -11,23 +11,23 @@ class DataUtil {
     calculateIndicators(dataList, mainLi, secondaryLi);
   }
 
-  static calculateIndicators(
+  static void calculateIndicators(
     List<KLineEntity> dataList,
     List<MainIndicator> mainLi,
     List<SecondaryIndicator> secondaryLi,
   ) {
     /// calculate main state
-    mainLi.forEach((e) {
+    for (var e in mainLi) {
       e.calc(dataList);
-    });
+    }
 
     /// calculate secondary state
-    secondaryLi.forEach((e) {
+    for (var e in secondaryLi) {
       e.calc(dataList);
-    });
+    }
   }
 
-  static calculateIndicator(
+  static void calculateIndicator(
     List<KLineEntity> dataList,
     IndicatorTemplate indicator,
   ) {

@@ -4,12 +4,11 @@ class EMAIndicator extends MainIndicator<CandleEntity, MAStyle> {
   late final Paint _linePaint;
 
   EMAIndicator({
-    List<int> calcParams = const [5, 10, 30, 60],
+    super.calcParams = const [5, 10, 30, 60],
     MAStyle indicatorStyle = const MAStyle(),
   }) : super(
          name: 'exponentialMovingAverage',
          shortName: 'EMA',
-         calcParams: calcParams,
          indicatorStyle: indicatorStyle,
        ) {
     _linePaint = Paint()

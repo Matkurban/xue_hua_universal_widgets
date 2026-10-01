@@ -65,7 +65,11 @@ class CCIIndicator extends SecondaryIndicator<MACDEntity, CCIStyle> {
     TextPainter maxTp = TextPainter(
       text: TextSpan(
         text:
-            "${NumberUtil.formatFixed((maxValue / jumpValue).round() * jumpValue, 0) ?? ''}",
+            NumberUtil.formatFixed(
+              (maxValue / jumpValue).round() * jumpValue,
+              0,
+            ) ??
+            '',
         style: style,
       ),
       textDirection: TextDirection.ltr,
@@ -77,7 +81,11 @@ class CCIIndicator extends SecondaryIndicator<MACDEntity, CCIStyle> {
     TextPainter minTp = TextPainter(
       text: TextSpan(
         text:
-            "${NumberUtil.formatFixed((minValue / jumpValue).round() * jumpValue, 0) ?? ''}",
+            NumberUtil.formatFixed(
+              (minValue / jumpValue).round() * jumpValue,
+              0,
+            ) ??
+            '',
         style: style,
       ),
       textDirection: TextDirection.ltr,

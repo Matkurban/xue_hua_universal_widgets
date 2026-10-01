@@ -17,7 +17,8 @@ class DepthChart extends StatefulWidget {
   const DepthChart(
     this.bids,
     this.asks,
-    this.chartColors, {super.key,
+    this.chartColors, {
+    super.key,
     this.baseUnit = 2,
     this.quoteUnit = 6,
     this.offset = const Offset(8, 0),
@@ -26,7 +27,7 @@ class DepthChart extends StatefulWidget {
   });
 
   @override
-  _DepthChartState createState() => _DepthChartState();
+  State<DepthChart> createState() => _DepthChartState();
 }
 
 class _DepthChartState extends State<DepthChart> {
@@ -120,28 +121,28 @@ class DepthChartPainter extends CustomPainter {
   ) {
     mBuyLinePaint ??= Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.upColor
+      ..color = chartColors.upColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = chartStyle.lineWidth;
     mSellLinePaint ??= Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.dnColor
+      ..color = chartColors.dnColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = chartStyle.lineWidth;
 
     mBuyPathPaint ??= Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.upFillPathColor;
+      ..color = chartColors.upFillPathColor;
     mSellPathPaint ??= Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.dnFillPathColor;
+      ..color = chartColors.dnFillPathColor;
     mBarrierPathPaint ??= Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.barrierColor;
+      ..color = chartColors.barrierColor;
     crossPaint = Paint()
       ..isAntiAlias = true
-      ..strokeWidth = this.chartStyle.crossWidth
-      ..color = this.chartColors.crossColor;
+      ..strokeWidth = chartStyle.crossWidth
+      ..color = chartColors.crossColor;
 
     mBuyPath ??= Path();
     mSellPath ??= Path();
@@ -152,8 +153,9 @@ class DepthChartPainter extends CustomPainter {
     if (mBuyData == null ||
         mSellData == null ||
         mBuyData!.isEmpty ||
-        mSellData!.isEmpty)
+        mSellData!.isEmpty) {
       return;
+    }
     mMaxVolume = max(mBuyData!.first.vol, mSellData!.last.vol);
     mMaxVolume = mMaxVolume! * 1.08;
     mMultiple = mMaxVolume! / mLineCount;
@@ -173,8 +175,9 @@ class DepthChartPainter extends CustomPainter {
     if (mBuyData == null ||
         mSellData == null ||
         mBuyData!.isEmpty ||
-        mSellData!.isEmpty)
+        mSellData!.isEmpty) {
       return;
+    }
     mWidth = size.width;
     mDrawWidth = mWidth / 2;
     mDrawHeight = size.height - mPaddingBottom;
@@ -408,9 +411,9 @@ class DepthChartPainter extends CustomPainter {
     ///draw popup info
     ///
     _PopupPainter popupPainter = _PopupPainter(
-      translations: this.chartTranslations,
-      chartColors: this.chartColors,
-      chartStyle: this.chartStyle,
+      translations: chartTranslations,
+      chartColors: chartColors,
+      chartStyle: chartStyle,
       price: NumberUtil.format(entity.price, quoteUnit) ?? '',
       amount: NumberUtil.formatCompact(entity.vol, baseUnit),
     );
@@ -470,9 +473,9 @@ class DepthChartPainter extends CustomPainter {
     ///draw popup info
     ///
     _PopupPainter popupPainter = _PopupPainter(
-      translations: this.chartTranslations,
-      chartColors: this.chartColors,
-      chartStyle: this.chartStyle,
+      translations: chartTranslations,
+      chartColors: chartColors,
+      chartStyle: chartStyle,
       price: NumberUtil.format(entity.price, quoteUnit) ?? '',
       amount: NumberUtil.formatCompact(entity.vol, baseUnit),
     );
@@ -527,9 +530,9 @@ class DepthChartPainter extends CustomPainter {
 
   double getSellX(int position) => position * mSellPointWidth! + mDrawWidth;
 
-  getTextPainter(String text) => TextPainter(
+  TextPainter getTextPainter(String text) => TextPainter(
     text: TextSpan(
-      text: "$text",
+      text: text,
       style: TextStyle(color: chartColors.defaultTextColor, fontSize: 10),
     ),
     textDirection: TextDirection.ltr,
@@ -576,10 +579,10 @@ class _PopupPainter {
     required String price,
     required String amount,
   }) {
-    this.pricePaint = _getTextPainter(translations.price, price);
-    this.amountPaint = _getTextPainter(translations.amount, amount);
-    this.pricePaint.layout();
-    this.amountPaint.layout();
+    pricePaint = _getTextPainter(translations.price, price);
+    amountPaint = _getTextPainter(translations.amount, amount);
+    pricePaint.layout();
+    amountPaint.layout();
   }
 
   void paint(Canvas canvas, Offset offset) {
@@ -601,7 +604,7 @@ class _PopupPainter {
     return TextPainter(
       text: TextSpan(
         text: '$label $content',
-        style: TextStyle(color: this.chartColors.annotationColor, fontSize: 9),
+        style: TextStyle(color: chartColors.annotationColor, fontSize: 9),
       ),
       textAlign: TextAlign.start,
       textDirection: TextDirection.ltr,

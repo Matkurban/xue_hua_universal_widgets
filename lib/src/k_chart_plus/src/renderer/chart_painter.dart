@@ -5,18 +5,15 @@ import 'package:material_ui/material_ui.dart';
 import '../entity/info_window_entity.dart';
 import '../entity/k_line_entity.dart';
 import '../extension/canvas_extension.dart';
-import '../interactive_layer/interactive_layer.dart';
-import '../utils/date_format_util.dart';
 import '../utils/index.dart';
 import 'base_chart_painter.dart';
 import 'base_chart_renderer.dart';
-import 'base_dimension.dart';
 import 'main_renderer.dart';
 import 'secondary_renderer.dart';
 import 'vol_renderer.dart';
 
 class ChartPainter extends BaseChartPainter {
-  static get maxScrollX => BaseChartPainter.maxScrollX;
+  static double get maxScrollX => BaseChartPainter.maxScrollX;
   late BaseChartRenderer mMainRenderer;
   BaseChartRenderer? mVolRenderer;
   Set<BaseChartRenderer> mSecondaryRendererList = {};
@@ -31,59 +28,48 @@ class ChartPainter extends BaseChartPainter {
   late Paint nowPriceSelectorPaint,
       nowPriceSelectorBorderPaint,
       nowPriceLinePaint;
-  final KChartStyle chartStyle;
+
   final bool hideGrid;
   final bool showNowPrice;
-  final BaseDimension baseDimension;
 
   ChartPainter(
-    this.chartStyle,
+    super.chartStyle,
     this.chartColors, {
     required this.sink,
-    required datas,
-    required PointViewPort pointViewPort,
-    required xFrontPadding,
-    required this.baseDimension,
-    mainIndicators,
-    volHidden,
-    secondaryIndicators,
-    bool isLine = false,
+    required super.datas,
+    required super.pointViewPort,
+    required super.xFrontPadding,
+    required super.baseDimension,
+    super.mainIndicators,
+    super.volHidden,
+    super.secondaryIndicators,
+    super.isLine,
     this.hideGrid = false,
     this.showNowPrice = true,
     this.fixedLength = 2,
-  }) : super(
-         chartStyle,
-         datas: datas,
-         pointViewPort: pointViewPort,
-         baseDimension: baseDimension,
-         mainIndicators: mainIndicators,
-         volHidden: volHidden,
-         secondaryIndicators: secondaryIndicators,
-         xFrontPadding: xFrontPadding,
-         isLine: isLine,
-       ) {
+  }) {
     crossLinePaint = Paint()
-      ..color = this.chartColors.crossColor
-      ..strokeWidth = this.chartStyle.crossWidth
+      ..color = chartColors.crossColor
+      ..strokeWidth = chartStyle.crossWidth
       ..isAntiAlias = true;
     selectPointPaint = Paint()
       ..isAntiAlias = true
-      ..color = this.chartColors.crossBgColor;
+      ..color = chartColors.crossBgColor;
     selectorBorderPaint = Paint()
       ..isAntiAlias = true
-      ..strokeWidth = this.chartStyle.borderWidth
+      ..strokeWidth = chartStyle.borderWidth
       ..style = PaintingStyle.stroke
-      ..color = this.chartColors.crossBgColor;
+      ..color = chartColors.crossBgColor;
 
     nowPriceSelectorPaint = Paint()
-      ..color = this.chartColors.bgColor
+      ..color = chartColors.bgColor
       ..isAntiAlias = true;
     nowPriceSelectorBorderPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = this.chartStyle.borderWidth
+      ..strokeWidth = chartStyle.borderWidth
       ..isAntiAlias = true;
     nowPriceLinePaint = Paint()
-      ..strokeWidth = this.chartStyle.nowPriceLineWidth
+      ..strokeWidth = chartStyle.nowPriceLineWidth
       ..isAntiAlias = true;
   }
 
@@ -97,9 +83,9 @@ class ChartPainter extends BaseChartPainter {
       mainIndicators,
       isLine,
       fixedLength,
-      this.chartStyle,
-      this.chartColors,
-      this.scaleX,
+      chartStyle,
+      chartColors,
+      scaleX,
       mBottomPadding,
     );
     if (mVolRect != null) {
@@ -109,9 +95,9 @@ class ChartPainter extends BaseChartPainter {
         mVolMinValue,
         mChildPadding,
         fixedLength,
-        this.chartStyle,
-        this.chartColors,
-        scaleX: this.scaleX,
+        chartStyle,
+        chartColors,
+        scaleX: scaleX,
       );
     }
     mSecondaryRendererList.clear();
@@ -171,9 +157,9 @@ class ChartPainter extends BaseChartPainter {
     if (!hideGrid) {
       mMainRenderer.drawGrid(canvas, mGridRows, mGridColumns);
       mVolRenderer?.drawGrid(canvas, mGridRows, mGridColumns);
-      mSecondaryRendererList.forEach((element) {
+      for (var element in mSecondaryRendererList) {
         element.drawGrid(canvas, mGridRows, mGridColumns);
-      });
+      }
     }
   }
 
@@ -191,9 +177,9 @@ class ChartPainter extends BaseChartPainter {
       double lastX = i == 0 ? curX : getX(i - 1);
       mMainRenderer.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
       mVolRenderer?.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
-      mSecondaryRendererList.forEach((element) {
+      for (var element in mSecondaryRendererList) {
         element.drawChart(lastPoint, curPoint, lastX, curX, size, canvas);
-      });
+      }
     }
 
     if (interactionMode == InteractionMode.crosshair) {
@@ -204,14 +190,14 @@ class ChartPainter extends BaseChartPainter {
 
   @override
   void drawVerticalText(canvas) {
-    var textStyle = getTextStyle(this.chartColors.defaultTextColor);
+    var textStyle = getTextStyle(chartColors.defaultTextColor);
     if (!hideGrid) {
       mMainRenderer.drawVerticalText(canvas, textStyle, mGridRows);
     }
     mVolRenderer?.drawVerticalText(canvas, textStyle, mGridRows);
-    mSecondaryRendererList.forEach((element) {
+    for (var element in mSecondaryRendererList) {
       element.drawVerticalText(canvas, textStyle, mGridRows);
-    });
+    }
   }
 
   @override
@@ -354,9 +340,9 @@ class ChartPainter extends BaseChartPainter {
     //Release to display the last data
     mMainRenderer.drawText(canvas, data, x);
     mVolRenderer?.drawText(canvas, data, x);
-    mSecondaryRendererList.forEach((element) {
+    for (var element in mSecondaryRendererList) {
       element.drawText(canvas, data, x);
-    });
+    }
   }
 
   @override
@@ -368,13 +354,13 @@ class ChartPainter extends BaseChartPainter {
     if (x < mWidth / 2) {
       //draw right
       TextPainter tp = getTextPainter(
-        "── " + (NumberUtil.formatFixed(mMainLowMinValue, fixedLength) ?? ''),
+        "── ${NumberUtil.formatFixed(mMainLowMinValue, fixedLength) ?? ''}",
         chartColors.minColor,
       );
       tp.paint(canvas, Offset(x, y - tp.height / 2));
     } else {
       TextPainter tp = getTextPainter(
-        (NumberUtil.formatFixed(mMainLowMinValue, fixedLength) ?? '') + " ──",
+        "${NumberUtil.formatFixed(mMainLowMinValue, fixedLength) ?? ''} ──",
         chartColors.minColor,
       );
       tp.paint(canvas, Offset(x - tp.width, y - tp.height / 2));
@@ -384,13 +370,13 @@ class ChartPainter extends BaseChartPainter {
     if (x < mWidth / 2) {
       //draw right
       TextPainter tp = getTextPainter(
-        "── " + (NumberUtil.formatFixed(mMainHighMaxValue, fixedLength) ?? ''),
+        "── ${NumberUtil.formatFixed(mMainHighMaxValue, fixedLength) ?? ''}",
         chartColors.maxColor,
       );
       tp.paint(canvas, Offset(x, y - tp.height / 2));
     } else {
       TextPainter tp = getTextPainter(
-        (NumberUtil.formatFixed(mMainHighMaxValue, fixedLength) ?? '') + " ──",
+        "${NumberUtil.formatFixed(mMainHighMaxValue, fixedLength) ?? ''} ──",
         chartColors.maxColor,
       );
       tp.paint(canvas, Offset(x - tp.width, y - tp.height / 2));
@@ -399,7 +385,7 @@ class ChartPainter extends BaseChartPainter {
 
   @override
   void drawNowPrice(Canvas canvas) {
-    if (!this.showNowPrice) {
+    if (!showNowPrice) {
       return;
     }
 
@@ -420,8 +406,8 @@ class ChartPainter extends BaseChartPainter {
     }
 
     Color priceColor = value >= datas!.last.open
-        ? this.chartColors.nowPriceUpColor
-        : this.chartColors.nowPriceDnColor;
+        ? chartColors.nowPriceUpColor
+        : chartColors.nowPriceDnColor;
 
     nowPriceSelectorBorderPaint.color = priceColor;
     nowPriceLinePaint.color = priceColor;
@@ -469,6 +455,7 @@ class ChartPainter extends BaseChartPainter {
   }
 
   ///draw cross lines
+  @override
   void drawCrossLine(Canvas canvas, Size size) {
     var index = calculateSelectedX(selectX);
     KLineEntity point = getItem(index);
@@ -487,18 +474,12 @@ class ChartPainter extends BaseChartPainter {
 
     // The canvas is no longer scaled, so a plain circle stays a circle at
     // any zoom level.
-    canvas.drawCircle(
-      Offset(x, y),
-      this.chartStyle.crossRadius,
-      crossLinePaint,
-    );
+    canvas.drawCircle(Offset(x, y), chartStyle.crossRadius, crossLinePaint);
   }
 
-  TextPainter getTextPainter(text, color) {
-    if (color == null) {
-      color = this.chartColors.defaultTextColor;
-    }
-    TextSpan span = TextSpan(text: "$text", style: getTextStyle(color));
+  TextPainter getTextPainter(String? text, Color? color) {
+    color ??= chartColors.defaultTextColor;
+    TextSpan span = TextSpan(text: text ?? '', style: getTextStyle(color));
     TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
     tp.layout();
     return tp;

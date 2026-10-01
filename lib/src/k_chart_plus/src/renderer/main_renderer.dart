@@ -13,7 +13,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
 
   //绘制的内容区域
   late Rect _contentRect;
-  double _contentPadding = 5.0;
+  final double _contentPadding = 5.0;
   final KChartStyle chartStyle;
   final KChartColors chartColors;
   final double mLineStrokeWidth = 1.0;
@@ -41,13 +41,13 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
         fixedLength: fixedLength,
         gridColor: chartColors.gridColor,
       ) {
-    mCandleWidth = this.chartStyle.candleWidth;
-    mCandleLineWidth = this.chartStyle.candleLineWidth;
+    mCandleWidth = chartStyle.candleWidth;
+    mCandleLineWidth = chartStyle.candleLineWidth;
     mLinePaint = Paint()
       ..isAntiAlias = true
       ..style = PaintingStyle.stroke
       ..strokeWidth = mLineStrokeWidth
-      ..color = this.chartColors.kLineColor;
+      ..color = chartColors.kLineColor;
     _contentRect = Rect.fromLTRB(
       chartRect.left,
       chartRect.top + _contentPadding,
@@ -87,7 +87,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
           tp.width + offset.dx + 2,
           tp.height + offset.dy + 2,
         ),
-        Paint()..color = this.chartColors.bgColor.withAlpha(80),
+        Paint()..color = chartColors.bgColor.withAlpha(80),
       );
 
       tp.paint(canvas, offset);
@@ -133,7 +133,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
     ..isAntiAlias = true;
 
   //画折线图
-  drawPolyline(
+  void drawPolyline(
     double lastPrice,
     double curPrice,
     Canvas canvas,
@@ -167,7 +167,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           tileMode: TileMode.clamp,
-          colors: this.chartColors.kLineFillColors,
+          colors: chartColors.kLineFillColors,
         ).createShader(
           Rect.fromLTRB(
             chartRect.left,
@@ -176,7 +176,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
             chartRect.bottom,
           ),
         );
-    mLineFillPaint..shader = mLineFillShader;
+    mLineFillPaint.shader = mLineFillShader;
 
     mLineFillPath ??= Path();
 
@@ -214,7 +214,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
       if (open - close < mCandleLineWidth) {
         open = close + mCandleLineWidth;
       }
-      chartPaint.color = this.chartColors.upColor;
+      chartPaint.color = chartColors.upColor;
       canvas.drawRect(
         Rect.fromLTRB(curX - r, close, curX + r, open),
         chartPaint,
@@ -228,7 +228,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
       if (close - open < mCandleLineWidth) {
         open = close - mCandleLineWidth;
       }
-      chartPaint.color = this.chartColors.dnColor;
+      chartPaint.color = chartColors.dnColor;
       canvas.drawRect(
         Rect.fromLTRB(curX - r, open, curX + r, close),
         chartPaint,
@@ -246,7 +246,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
     for (var i = 0; i <= gridRows; ++i) {
       double value = (gridRows - i) * rowSpace / scaleY + minValue;
       TextSpan span = TextSpan(
-        text: "${NumberUtil.formatFixed(value, fixedLength) ?? ''}",
+        text: NumberUtil.formatFixed(value, fixedLength) ?? '',
         style: textStyle,
       );
       TextPainter tp = TextPainter(
@@ -256,7 +256,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
       tp.layout();
 
       // VerticalTextAlignment.right
-      double offsetX = chartRect.width - tp.width - this.chartStyle.space;
+      double offsetX = chartRect.width - tp.width - chartStyle.space;
 
       if (i == 0) {
         tp.paint(canvas, Offset(offsetX, topPadding));
