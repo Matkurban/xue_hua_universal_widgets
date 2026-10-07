@@ -1,6 +1,6 @@
 name: xue_hua_universal_widgets
 description: "xue_hua_universal_widgets."
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/Matkurban
 repository: https://github.com/Matkurban/xue_hua_universal_widgets
 
@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
   intl: any
   decimal: ^3.2.6
-  material_ui: ^1.5.0
+  material_ui: ^1.6.0
 
 
 dev_dependencies:
