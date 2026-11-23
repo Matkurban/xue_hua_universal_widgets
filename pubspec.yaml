@@ -12,8 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   intl: any
-  decimal: ^3.2.6
-  material_ui: ^1.6.0
+  decimal: ^3.2.7
+  material_ui: ^1.11.1
 
 
 dev_dependencies:
