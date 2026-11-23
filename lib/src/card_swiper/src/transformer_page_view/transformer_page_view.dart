@@ -15,8 +15,8 @@ import 'index_controller.dart';
 ///
 ///
 
-const int kMaxValue = 2000000000;
-const int kMiddleValue = 1000000000;
+const int kMaxValue = 20000;
+const int kMiddleValue = 10000;
 
 ///  Default auto play transition duration (in millisecond)
 const int kDefaultTransactionDuration = 300;
@@ -126,7 +126,7 @@ class TransformerPageController extends PageController {
 
   int? getRealItemCount() {
     if (itemCount == 0) return 0;
-    return loop ? itemCount + kMaxValue : itemCount;
+    return loop ? null : itemCount;
   }
 
   static int _getRenderIndexFromRealIndex(
@@ -161,6 +161,7 @@ class TransformerPageController extends PageController {
     int itemCount,
     bool reverse,
   ) {
+    if (itemCount == 0) return 0.0;
     double? renderPage;
     if (loop) {
       renderPage = page - kMiddleValue;

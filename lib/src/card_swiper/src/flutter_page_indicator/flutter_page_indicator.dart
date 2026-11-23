@@ -275,7 +275,10 @@ class _PageIndicatorState extends State<PageIndicator> {
   void _setInitialPage() {
     // use the initial page index but cut off
     // the offset specified when looping (kMiddleValue)
-    index = widget.controller.initialPage % kMiddleValue;
+    final controller = widget.controller;
+    index = controller is TransformerPageController
+        ? controller.getRenderIndexFromRealIndex(controller.initialPage)
+        : controller.initialPage % kMiddleValue;
     page = index.toDouble();
   }
 
