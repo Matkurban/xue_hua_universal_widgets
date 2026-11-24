@@ -1,6 +1,6 @@
 ## 0.0.2
 
-- **Dependencies**: Update `material_ui` to `^1.11.1`, `decimal` to `^3.2.7`, and constrain `intl` to `^0.20.2`.
+- **Dependencies**: Update `material_ui` to `^1.11.1` and `decimal` to `^3.2.7`.
 - **Architecture & Code Quality**:
   - Refactored all 6 integrated widget modules (`read_more`, `auto_size_text`, `auto_size_text_field`, `card_swiper`, `carousel_slider`, `k_chart_plus`) to eliminate widget-returning helper methods, inline single-use widgets, encapsulate file-scoped repeated widgets into private widget classes, and organize shared widgets under dedicated `widgets/` directories.
   - Extracted shared font-size fitting engine (`AutoSizeTextFieldFitter`) for `AutoSizeTextField` and `AutoSizeTextFormField`.
