@@ -201,16 +201,16 @@ class DotSwiperPaginationBuilder extends SwiperPlugin {
 
     for (var i = 0; i < itemCount; ++i) {
       final active = i == activeIndex;
+      final dotSize = active ? activeSize : size;
       list.add(
         Container(
           key: Key('pagination_$i'),
           margin: EdgeInsets.all(space),
-          child: ClipOval(
-            child: Container(
-              color: active ? activeColor : color,
-              width: active ? activeSize : size,
-              height: active ? activeSize : size,
-            ),
+          width: dotSize,
+          height: dotSize,
+          decoration: BoxDecoration(
+            color: active ? activeColor : color,
+            shape: BoxShape.circle,
           ),
         ),
       );
@@ -277,7 +277,7 @@ class SwiperPagination extends SwiperPlugin {
       margin: margin,
       child: builder.build(context, config),
     );
-    if (!config.outer!) {
+    if (!(config.outer ?? false)) {
       child = Align(
         key: key,
         alignment: alignment ?? defaultAlignment,

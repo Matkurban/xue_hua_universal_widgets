@@ -75,6 +75,7 @@ class KDJIndicator extends SecondaryIndicator<MACDEntity, KDJStyle> {
   }) {
     List<int> rangeValue = [80, 20];
     final spaceRange = maxValue - minValue;
+    if (spaceRange == 0) return;
 
     for (int i = 0; i < rangeValue.length; ++i) {
       final value = rangeValue[i];
@@ -91,6 +92,7 @@ class KDJIndicator extends SecondaryIndicator<MACDEntity, KDJStyle> {
         canvas,
         Offset(x, y.clamp(chartRect.top, chartRect.bottom - tp.height)),
       );
+      tp.dispose();
     }
   }
 
@@ -105,21 +107,21 @@ class KDJIndicator extends SecondaryIndicator<MACDEntity, KDJStyle> {
     KChartColors chartColors,
     double scaleX,
   ) {
-    if (curPoint.k != null || lastPoint.k != null) {
+    if (curPoint.k != null && lastPoint.k != null) {
       canvas.drawLine(
         Offset(curX, getY(curPoint.k!)),
         Offset(lastX, getY(lastPoint.k!)),
         _linePaint..color = indicatorStyle.kColor,
       );
     }
-    if (curPoint.d != null || lastPoint.d != null) {
+    if (curPoint.d != null && lastPoint.d != null) {
       canvas.drawLine(
         Offset(curX, getY(curPoint.d!)),
         Offset(lastX, getY(lastPoint.d!)),
         _linePaint..color = indicatorStyle.dColor,
       );
     }
-    if (curPoint.j != null || lastPoint.j != null) {
+    if (curPoint.j != null && lastPoint.j != null) {
       canvas.drawLine(
         Offset(curX, getY(curPoint.j!)),
         Offset(lastX, getY(lastPoint.j!)),
@@ -130,6 +132,7 @@ class KDJIndicator extends SecondaryIndicator<MACDEntity, KDJStyle> {
 
   @override
   void calc(List<KLineEntity> dataList) {
+    if (dataList.isEmpty) return;
     var preK = 50.0;
     var preD = 50.0;
     final tmp = dataList.first;

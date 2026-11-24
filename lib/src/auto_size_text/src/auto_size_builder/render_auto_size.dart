@@ -61,7 +61,7 @@ class _RenderAutoSize extends RenderBox
 
   @override
   void setupParentData(RenderObject child) {
-    if (child.parentData is! ListWheelParentData) {
+    if (child.parentData is! _AutoSizeParentData) {
       child.parentData = _AutoSizeParentData();
     }
   }
@@ -75,7 +75,7 @@ class _RenderAutoSize extends RenderBox
     _longestWordWidth = result.longestWordWidth;
 
     if (result.overflow && hasReplacement) {
-      return child.getMinIntrinsicWidth(height);
+      return lastChild!.getMinIntrinsicWidth(height);
     } else {
       return result.minIntrinsicWidth;
     }

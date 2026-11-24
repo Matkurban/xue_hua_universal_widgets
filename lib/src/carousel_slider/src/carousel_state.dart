@@ -18,7 +18,6 @@ class CarouselState {
   int realPage = 10000;
 
   /// The initial index of the [PageView] on [CarouselSlider] init.
-  ///
   int initialPage = 0;
 
   /// The widgets count that should be shown at carousel
@@ -27,15 +26,15 @@ class CarouselState {
   /// Will be called when using pageController to go to next page or
   /// previous page. It will clear the autoPlay timer.
   /// Internal use only
-  Function onResetTimer;
+  VoidCallback onResetTimer;
 
   /// Will be called when using pageController to go to next page or
   /// previous page. It will restart the autoPlay timer.
   /// Internal use only
-  Function onResumeTimer;
+  VoidCallback onResumeTimer;
 
   /// The callback to set the Reason Carousel changed
-  Function(CarouselPageChangedReason) changeMode;
+  void Function(CarouselPageChangedReason) changeMode;
 
   CarouselState(
     this.options,

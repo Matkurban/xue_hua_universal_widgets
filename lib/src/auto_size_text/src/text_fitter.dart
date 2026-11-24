@@ -3,6 +3,8 @@ part of '../auto_size_text.dart';
 const _kDefaultFontSize = 14;
 
 class TextFitter {
+  static final RegExp _wordRegex = RegExp(r'\s+');
+
   TextFitter({
     required this.text,
     required this.textAlign,
@@ -92,7 +94,8 @@ class TextFitter {
     if (presetFontSizes == null) {
       scale = right * textScaleFactor * stepGranularity / fontSize;
     } else {
-      scale = presetFontSizes[right] * textScaleFactor / fontSize;
+      final safeIndex = right.clamp(0, presetFontSizes.length - 1);
+      scale = presetFontSizes[safeIndex] * textScaleFactor / fontSize;
     }
 
     return lastFitting.copyWith(scale: scale);
@@ -165,11 +168,10 @@ class TextFitter {
   }
 
   List<TextSpan> _getWordSpans() {
-    final wordRegex = RegExp('\\s+');
     Iterable<TextSpan> splitSpan(TextSpan span, TextStyle? style) sync* {
       final mergedStyle = span.style?.merge(style) ?? style;
       if (span.text != null) {
-        final words = span.text!.split(wordRegex);
+        final words = span.text!.split(_wordRegex);
         for (final word in words) {
           yield TextSpan(text: '$word\n', style: mergedStyle);
         }
@@ -191,6 +193,7 @@ class TextFitter {
         other.text == text &&
         other.textAlign == textAlign &&
         other.textDirection == textDirection &&
+        other.minLines == minLines &&
         other.maxLines == maxLines &&
         other.locale == locale &&
         other.strutStyle == strutStyle &&
@@ -201,7 +204,7 @@ class TextFitter {
         other.minFontSize == minFontSize &&
         other.maxFontSize == maxFontSize &&
         other.stepGranularity == stepGranularity &&
-        other.presetFontSizes == presetFontSizes;
+        listEquals(other.presetFontSizes, presetFontSizes);
   }
 
   @override
@@ -210,6 +213,7 @@ class TextFitter {
       text,
       textAlign,
       textDirection,
+      minLines,
       maxLines,
       locale,
       strutStyle,
@@ -220,7 +224,7 @@ class TextFitter {
       minFontSize,
       maxFontSize,
       stepGranularity,
-      presetFontSizes,
+      presetFontSizes == null ? null : Object.hashAll(presetFontSizes!),
     );
   }
 }

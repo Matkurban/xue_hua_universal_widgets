@@ -76,6 +76,7 @@ class CCIIndicator extends SecondaryIndicator<MACDEntity, CCIStyle> {
     );
     maxTp.layout();
     maxTp.paint(canvas, Offset(chartRect.width - maxTp.width, chartRect.top));
+    maxTp.dispose();
 
     /// min
     TextPainter minTp = TextPainter(
@@ -95,6 +96,7 @@ class CCIIndicator extends SecondaryIndicator<MACDEntity, CCIStyle> {
       canvas,
       Offset(chartRect.width - minTp.width, chartRect.bottom - minTp.height),
     );
+    minTp.dispose();
   }
 
   @override
@@ -118,6 +120,7 @@ class CCIIndicator extends SecondaryIndicator<MACDEntity, CCIStyle> {
 
   @override
   void calc(List<KLineEntity> dataList) {
+    if (dataList.isEmpty || calcParams.isEmpty) return;
     final periods = calcParams.first;
     final p = periods - 1;
     double tpSum = 0;

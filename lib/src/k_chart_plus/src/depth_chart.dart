@@ -292,6 +292,7 @@ class DepthChartPainter extends CustomPainter {
         canvas,
         Offset(mWidth - tp.width, mDrawHeight / mLineCount * j + tp.height / 2),
       );
+      tp.dispose();
     }
 
     var startText =
@@ -299,6 +300,7 @@ class DepthChartPainter extends CustomPainter {
     TextPainter startTP = getTextPainter(startText);
     startTP.layout();
     startTP.paint(canvas, Offset(0, getBottomTextY(startTP.height)));
+    startTP.dispose();
 
     double centerPrice = (mBuyData!.last.price + mSellData!.first.price) / 2;
 
@@ -309,6 +311,7 @@ class DepthChartPainter extends CustomPainter {
       canvas,
       Offset(mDrawWidth - centerTP.width / 2, getBottomTextY(centerTP.height)),
     );
+    centerTP.dispose();
 
     var endText =
         NumberUtil.formatFixed(mSellData!.last.price, quoteUnit) ?? '';
@@ -318,6 +321,7 @@ class DepthChartPainter extends CustomPainter {
       canvas,
       Offset(mWidth - endTP.width, getBottomTextY(endTP.height)),
     );
+    endTP.dispose();
 
     var leftHalfText =
         NumberUtil.formatFixed(
@@ -334,6 +338,7 @@ class DepthChartPainter extends CustomPainter {
         getBottomTextY(leftHalfTP.height),
       ),
     );
+    leftHalfTP.dispose();
 
     var rightHalfText =
         NumberUtil.formatFixed(
@@ -350,11 +355,13 @@ class DepthChartPainter extends CustomPainter {
         getBottomTextY(rightHalfTP.height),
       ),
     );
+    rightHalfTP.dispose();
 
-    if (isLongPress == true) {
-      if (pressOffset!.dx <= mDrawWidth) {
+    final currentOffset = pressOffset;
+    if (isLongPress && currentOffset != null) {
+      if (currentOffset.dx <= mDrawWidth) {
         int index = _indexOfTranslateX(
-          pressOffset!.dx,
+          currentOffset.dx,
           0,
           mBuyData!.length - 1,
           getBuyX,
@@ -362,12 +369,12 @@ class DepthChartPainter extends CustomPainter {
         drawLeftSelectView(canvas, index); // buy
 
         int indexRight = mBuyData!.length - index - 1;
-        if (indexRight < mSellData!.length) {
+        if (indexRight >= 0 && indexRight < mSellData!.length) {
           drawRightSelectView(canvas, indexRight);
         }
       } else {
         int index = _indexOfTranslateX(
-          pressOffset!.dx,
+          currentOffset.dx,
           0,
           mSellData!.length - 1,
           getSellX,
@@ -438,6 +445,7 @@ class DepthChartPainter extends CustomPainter {
     canvas.drawRRect(boxRect, selectPaint!);
     canvas.drawRRect(boxRect, selectBorderPaint!);
     popupPainter.paint(canvas, rect.topLeft);
+    popupPainter.dispose();
   }
 
   void drawRightSelectView(Canvas canvas, int index) {
@@ -501,6 +509,7 @@ class DepthChartPainter extends CustomPainter {
     canvas.drawRRect(boxRect, selectPaint!);
     canvas.drawRRect(boxRect, selectBorderPaint!);
     popupPainter.paint(canvas, rect.topLeft);
+    popupPainter.dispose();
   }
 
   ///Binary search for current value: index
@@ -546,11 +555,16 @@ class DepthChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(DepthChartPainter oldDelegate) {
-    //    return oldDelegate.mBuyData != mBuyData ||
-    //        oldDelegate.mSellData != mSellData ||
-    //        oldDelegate.isLongPress != isLongPress ||
-    //        oldDelegate.pressOffset != pressOffset;
-    return true;
+    return oldDelegate.mBuyData != mBuyData ||
+        oldDelegate.mSellData != mSellData ||
+        oldDelegate.isLongPress != isLongPress ||
+        oldDelegate.pressOffset != pressOffset ||
+        oldDelegate.baseUnit != baseUnit ||
+        oldDelegate.quoteUnit != quoteUnit ||
+        oldDelegate.chartColors != chartColors ||
+        oldDelegate.chartStyle != chartStyle ||
+        oldDelegate.offset != offset ||
+        oldDelegate.chartTranslations != chartTranslations;
   }
 }
 
@@ -558,7 +572,6 @@ class _PopupPainter {
   final DepthChartColors chartColors;
   final DepthChartStyle chartStyle;
 
-  late final TextPainter annotationsPaint;
   late final TextPainter pricePaint;
   late final TextPainter amountPaint;
 
@@ -598,6 +611,11 @@ class _PopupPainter {
             pricePaint.height + chartStyle.space + chartStyle.padding,
           ),
     );
+  }
+
+  void dispose() {
+    pricePaint.dispose();
+    amountPaint.dispose();
   }
 
   TextPainter _getTextPainter(String label, String content) {

@@ -57,6 +57,7 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
     TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
     tp.layout();
     tp.paint(canvas, Offset(x, chartRect.top - topPadding));
+    tp.dispose();
   }
 
   @override
@@ -78,14 +79,13 @@ class SecondaryRenderer extends BaseChartRenderer<MACDEntity> {
 
   @override
   void drawGrid(Canvas canvas, int gridRows, int gridColumns) {
-    // canvas.drawLine(Offset(0, chartRect.top), Offset(chartRect.width, chartRect.top), gridPaint); //hidden line
     canvas.drawLine(
       Offset(0, chartRect.bottom),
       Offset(chartRect.width, chartRect.bottom),
       gridPaint,
     );
     double columnSpace = chartRect.width / gridColumns;
-    for (int i = 0; i <= columnSpace; i++) {
+    for (int i = 0; i <= gridColumns; i++) {
       //mSecondaryRect垂直线
       canvas.drawLine(
         Offset(columnSpace * i, chartRect.top - topPadding),

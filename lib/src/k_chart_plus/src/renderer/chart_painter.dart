@@ -28,6 +28,7 @@ class ChartPainter extends BaseChartPainter {
   late Paint nowPriceSelectorPaint,
       nowPriceSelectorBorderPaint,
       nowPriceLinePaint;
+  late final Paint _bgPaint;
 
   final bool hideGrid;
   final bool showNowPrice;
@@ -48,6 +49,7 @@ class ChartPainter extends BaseChartPainter {
     this.showNowPrice = true,
     this.fixedLength = 2,
   }) {
+    _bgPaint = Paint()..color = chartColors.bgColor;
     crossLinePaint = Paint()
       ..color = chartColors.crossColor
       ..strokeWidth = chartStyle.crossWidth
@@ -120,14 +122,13 @@ class ChartPainter extends BaseChartPainter {
 
   @override
   void drawBg(Canvas canvas, Size size) {
-    Paint mBgPaint = Paint()..color = chartColors.bgColor;
     Rect mainRect = Rect.fromLTRB(
       0,
       0,
       mMainRect.width,
       mMainRect.height + mTopPadding,
     );
-    canvas.drawRect(mainRect, mBgPaint);
+    canvas.drawRect(mainRect, _bgPaint);
 
     if (mVolRect != null) {
       Rect volRect = Rect.fromLTRB(
@@ -136,20 +137,20 @@ class ChartPainter extends BaseChartPainter {
         mVolRect!.width,
         mVolRect!.bottom,
       );
-      canvas.drawRect(volRect, mBgPaint);
+      canvas.drawRect(volRect, _bgPaint);
     }
 
     for (int i = 0; i < mSecondaryRectList.length; ++i) {
-      Rect? mSecondaryRect = mSecondaryRectList[i].mRect;
+      Rect mSecondaryRect = mSecondaryRectList[i].mRect;
       Rect secondaryRect = Rect.fromLTRB(
         0,
         mSecondaryRect.top - mChildPadding,
         mSecondaryRect.width,
         mSecondaryRect.bottom,
       );
-      canvas.drawRect(secondaryRect, mBgPaint);
+      canvas.drawRect(secondaryRect, _bgPaint);
     }
-    canvas.drawRect(mDateRect, mBgPaint);
+    canvas.drawRect(mDateRect, _bgPaint);
   }
 
   @override
@@ -223,19 +224,9 @@ class ChartPainter extends BaseChartPainter {
         if (x < 0) x = 0;
         if (x > size.width - tp.width) x = size.width - tp.width;
         tp.paint(canvas, Offset(x, y));
+        tp.dispose();
       }
     }
-
-    //    double translateX = xToTranslateX(0);
-    //    if (translateX >= startX && translateX <= stopX) {
-    //      TextPainter tp = getTextPainter(getDate(datas[mStartIndex].id));
-    //      tp.paint(canvas, Offset(0, y));
-    //    }
-    //    translateX = xToTranslateX(size.width);
-    //    if (translateX >= startX && translateX <= stopX) {
-    //      TextPainter tp = getTextPainter(getDate(datas[mStopIndex].id));
-    //      tp.paint(canvas, Offset(size.width - tp.width, y));
-    //    }
   }
 
   /// draw the cross line. when user focus
@@ -285,6 +276,7 @@ class ChartPainter extends BaseChartPainter {
       canvas.drawRRect(rect, selectorBorderPaint);
       tp.paint(canvas, Offset(x + w1, y - textHeight / 2));
     }
+    tp.dispose();
 
     TextPainter dateTp = getTextPainter(
       getDate(point.time),
@@ -309,7 +301,6 @@ class ChartPainter extends BaseChartPainter {
       Radius.circular(2.0),
     );
 
-    // double baseLine = textHeight / 2;
     canvas.drawRRect(rectBox, selectPointPaint);
     canvas.drawRRect(rectBox, selectorBorderPaint);
 
@@ -320,8 +311,9 @@ class ChartPainter extends BaseChartPainter {
         mDateRect.top + (mDateRect.height - dateTp.height) / 2,
       ),
     );
+    dateTp.dispose();
 
-    //Long press to display the details of this data
+    // Long press to display the details of this data
     sink.add(InfoWindowEntity(point, isLeft: isLeft));
   }
 
@@ -358,12 +350,14 @@ class ChartPainter extends BaseChartPainter {
         chartColors.minColor,
       );
       tp.paint(canvas, Offset(x, y - tp.height / 2));
+      tp.dispose();
     } else {
       TextPainter tp = getTextPainter(
         "${NumberUtil.formatFixed(mMainLowMinValue, fixedLength) ?? ''} ──",
         chartColors.minColor,
       );
       tp.paint(canvas, Offset(x - tp.width, y - tp.height / 2));
+      tp.dispose();
     }
     x = translateXtoX(getX(mMainMaxIndex));
     y = getMainY(mMainHighMaxValue);
@@ -374,12 +368,14 @@ class ChartPainter extends BaseChartPainter {
         chartColors.maxColor,
       );
       tp.paint(canvas, Offset(x, y - tp.height / 2));
+      tp.dispose();
     } else {
       TextPainter tp = getTextPainter(
         "${NumberUtil.formatFixed(mMainHighMaxValue, fixedLength) ?? ''} ──",
         chartColors.maxColor,
       );
       tp.paint(canvas, Offset(x - tp.width, y - tp.height / 2));
+      tp.dispose();
     }
   }
 
@@ -452,6 +448,7 @@ class ChartPainter extends BaseChartPainter {
     canvas.drawRRect(rect, nowPriceSelectorPaint);
     canvas.drawRRect(rect, nowPriceSelectorBorderPaint);
     tp.paint(canvas, Offset(offsetX + paddingX, top));
+    tp.dispose();
   }
 
   ///draw cross lines
@@ -503,5 +500,14 @@ class ChartPainter extends BaseChartPainter {
   /// Whether the point is in MainRect
   bool isInMainRect(Offset point) {
     return mMainRect.contains(point);
+  }
+
+  @override
+  bool shouldRepaint(covariant ChartPainter oldDelegate) {
+    return super.shouldRepaint(oldDelegate) ||
+        oldDelegate.chartColors != chartColors ||
+        oldDelegate.hideGrid != hideGrid ||
+        oldDelegate.showNowPrice != showNowPrice ||
+        oldDelegate.fixedLength != fixedLength;
   }
 }

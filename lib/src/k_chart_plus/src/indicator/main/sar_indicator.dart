@@ -74,6 +74,7 @@ class SARIndicator extends MainIndicator<CandleEntity, SARStyle> {
 
   @override
   void calc(List<KLineEntity> dataList) {
+    if (dataList.isEmpty || calcParams.length < 3) return;
     final startAf = calcParams[0] / 100;
     final step = calcParams[1] / 100;
     final maxAf = calcParams[2] / 100;

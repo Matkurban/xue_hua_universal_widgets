@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart'
     show Color, TextStyle, Rect, Canvas, Size, CustomPainter;
 
@@ -67,6 +68,10 @@ abstract class BaseChartPainter extends CustomPainter {
   double mMainHighMaxValue = double.minPositive,
       mMainLowMinValue = double.maxFinite;
   int mItemCount = 0;
+  double? _lastClose;
+  double? _lastHigh;
+  double? _lastLow;
+  double? _lastVol;
   double mDataLen = 0.0; // the data occupies the total length of the screen
   final KChartStyle chartStyle;
   late double mPointWidth;
@@ -92,6 +97,13 @@ abstract class BaseChartPainter extends CustomPainter {
     this.isLine = false,
   }) : super(repaint: pointViewPort) {
     mItemCount = datas?.length ?? 0;
+    if (mItemCount > 0) {
+      final last = datas!.last;
+      _lastClose = last.close;
+      _lastHigh = last.high;
+      _lastLow = last.low;
+      _lastVol = last.vol;
+    }
     mTopPadding =
         chartStyle.topPadding +
         baseDimension.totalLabelHeight; // space to display text of main chart
@@ -259,8 +271,9 @@ abstract class BaseChartPainter extends CustomPainter {
     pointViewPort.updateBounds(maxScrollX: maxScrollX);
 
     setTranslateXFromScrollX(scrollX);
-    mStartIndex = indexOfTranslateX(xToTranslateX(0));
-    mStopIndex = indexOfTranslateX(xToTranslateX(mWidth));
+    mStartIndex = indexOfTranslateX(xToTranslateX(0)).clamp(0, mItemCount - 1);
+    mStopIndex = indexOfTranslateX(xToTranslateX(mWidth))
+        .clamp(mStartIndex, mItemCount - 1);
     for (int i = mStartIndex; i <= mStopIndex; i++) {
       var item = datas![i];
       getMainMaxMinValue(item, i);
@@ -432,7 +445,21 @@ abstract class BaseChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(BaseChartPainter oldDelegate) {
-    return true;
+    return oldDelegate.datas != datas ||
+        oldDelegate.mItemCount != mItemCount ||
+        oldDelegate._lastClose != _lastClose ||
+        oldDelegate._lastHigh != _lastHigh ||
+        oldDelegate._lastLow != _lastLow ||
+        oldDelegate._lastVol != _lastVol ||
+        oldDelegate.chartStyle != chartStyle ||
+        oldDelegate.isLine != isLine ||
+        oldDelegate.volHidden != volHidden ||
+        oldDelegate.xFrontPadding != xFrontPadding ||
+        oldDelegate.pointViewPort != pointViewPort ||
+        oldDelegate.baseDimension.mDisplayHeight !=
+            baseDimension.mDisplayHeight ||
+        !listEquals(oldDelegate.mainIndicators, mainIndicators) ||
+        !listEquals(oldDelegate.secondaryIndicators, secondaryIndicators);
   }
 }
 

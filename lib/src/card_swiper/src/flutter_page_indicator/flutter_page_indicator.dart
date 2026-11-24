@@ -228,7 +228,15 @@ abstract class BasePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(BasePainter oldDelegate) {
-    return oldDelegate.page != page;
+    return oldDelegate.page != page ||
+        oldDelegate.index != index ||
+        oldDelegate.widget.count != widget.count ||
+        oldDelegate.widget.size != widget.size ||
+        oldDelegate.widget.space != widget.space ||
+        oldDelegate.widget.color != widget.color ||
+        oldDelegate.widget.activeColor != widget.activeColor ||
+        oldDelegate.widget.scale != widget.scale ||
+        oldDelegate.widget.dropHeight != widget.dropHeight;
   }
 }
 

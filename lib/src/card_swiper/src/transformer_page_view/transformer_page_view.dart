@@ -370,80 +370,82 @@ class TransformerPageView extends StatefulWidget {
 class _TransformerPageViewState extends State<TransformerPageView> {
   Size? _size;
   int _activeIndex = 0;
-  late double _currentPixels;
+  double _currentPixels = 0.0;
   bool _done = false;
 
-  ///This value will not change until user end drag.
+  /// This value will not change until user end drag.
   late int _fromIndex;
 
   PageTransformer? _transformer;
 
   late TransformerPageController _pageController;
-
-  Widget _buildItemNormal(BuildContext context, int index) {
-    final renderIndex = _pageController.getRenderIndexFromRealIndex(index);
-    return widget.itemBuilder!(context, renderIndex);
-  }
-
-  Widget _buildItem(BuildContext context, int index) {
-    return AnimatedBuilder(
-      animation: _pageController,
-      builder: (c, w) {
-        final renderIndex = _pageController.getRenderIndexFromRealIndex(index);
-        final child =
-            widget.itemBuilder?.call(context, renderIndex) ??
-            const SizedBox.shrink();
-        if (_size == null) {
-          return child;
-        }
-
-        double position;
-
-        final page = _pageController.realPage;
-        if (_transformer!.reverse) {
-          position = page - index;
-        } else {
-          position = index - page;
-        }
-        position *= widget.viewportFraction;
-
-        final info = TransformInfo(
-          index: renderIndex,
-          width: _size!.width,
-          height: _size!.height,
-          position: position.clamp(-1.0, 1.0),
-          activeIndex: _pageController.getRenderIndexFromRealIndex(
-            _activeIndex,
-          ),
-          fromIndex: _fromIndex,
-          forward: _pageController.position.pixels - _currentPixels >= 0,
-          done: _done,
-          scrollDirection: widget.scrollDirection,
-          viewportFraction: widget.viewportFraction,
-        );
-
-        return _transformer!.transform(child, info);
-      },
-    );
-  }
+  bool _ownsPageController = false;
 
   double? _calcCurrentPixels() {
+    if (!_pageController.hasClients) return _currentPixels;
     _currentPixels =
         _pageController.getRenderIndexFromRealIndex(_activeIndex) *
         _pageController.position.viewportDimension *
         widget.viewportFraction;
-
-    //  print("activeIndex:$_activeIndex , pix:$_currentPixels");
 
     return _currentPixels;
   }
 
   @override
   Widget build(BuildContext context) {
-    final builder = _transformer == null ? _buildItemNormal : _buildItem;
+    final transformer = _transformer;
     final child = PageView.builder(
       allowImplicitScrolling: widget.allowImplicitScrolling,
-      itemBuilder: builder,
+      itemBuilder: (BuildContext context, int index) {
+        if (transformer == null) {
+          final renderIndex = _pageController.getRenderIndexFromRealIndex(
+            index,
+          );
+          return widget.itemBuilder!(context, renderIndex);
+        }
+
+        return AnimatedBuilder(
+          animation: _pageController,
+          builder: (BuildContext c, Widget? w) {
+            final renderIndex = _pageController.getRenderIndexFromRealIndex(
+              index,
+            );
+            final item =
+                widget.itemBuilder?.call(context, renderIndex) ??
+                const SizedBox.shrink();
+            final size = _size;
+            if (size == null) {
+              return item;
+            }
+
+            final page = _pageController.realPage;
+            final double position =
+                (transformer.reverse ? (page - index) : (index - page)) *
+                widget.viewportFraction;
+
+            final forward =
+                !_pageController.hasClients ||
+                _pageController.position.pixels - _currentPixels >= 0;
+
+            final info = TransformInfo(
+              index: renderIndex,
+              width: size.width,
+              height: size.height,
+              position: position.clamp(-1.0, 1.0),
+              activeIndex: _pageController.getRenderIndexFromRealIndex(
+                _activeIndex,
+              ),
+              fromIndex: _fromIndex,
+              forward: forward,
+              done: _done,
+              scrollDirection: widget.scrollDirection,
+              viewportFraction: widget.viewportFraction,
+            );
+
+            return transformer.transform(item, info);
+          },
+        );
+      },
       itemCount: _pageController.getRealItemCount(),
       onPageChanged: _onIndexChanged,
       controller: _pageController,
@@ -453,11 +455,11 @@ class _TransformerPageViewState extends State<TransformerPageView> {
       pageSnapping: widget.pageSnapping,
       reverse: _pageController.reverse,
     );
-    if (_transformer == null) {
+    if (transformer == null) {
       return child;
     }
-    return NotificationListener(
-      onNotification: (notification) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
         if (notification is ScrollStartNotification) {
           _calcCurrentPixels();
           _done = false;
@@ -507,17 +509,18 @@ class _TransformerPageViewState extends State<TransformerPageView> {
   @override
   void initState() {
     _transformer = widget.transformer;
-    // int index = widget.index ?? 0;
-    _pageController =
-        widget.pageController ??
-        TransformerPageController(
-          initialPage: widget.index ?? 0,
-          itemCount: widget.itemCount,
-          loop: widget.loop,
-          reverse: widget.transformer?.reverse ?? false,
-        );
-    // int initPage = _getRealIndexFromRenderIndex(index);
-    // _pageController =  PageController(initialPage: initPage,viewportFraction: widget.viewportFraction);
+    if (widget.pageController != null) {
+      _pageController = widget.pageController!;
+      _ownsPageController = false;
+    } else {
+      _pageController = TransformerPageController(
+        initialPage: widget.index ?? 0,
+        itemCount: widget.itemCount,
+        loop: widget.loop,
+        reverse: widget.transformer?.reverse ?? false,
+      );
+      _ownsPageController = true;
+    }
     _fromIndex = _activeIndex = _pageController.initialPage;
 
     _controller = widget.controller;
@@ -531,8 +534,11 @@ class _TransformerPageViewState extends State<TransformerPageView> {
     final index = widget.index ?? 0;
     var created = false;
     if (_pageController != widget.pageController) {
+      final previousController = _pageController;
+      final ownedPrevious = _ownsPageController;
       if (widget.pageController != null) {
         _pageController = widget.pageController!;
+        _ownsPageController = false;
       } else {
         created = true;
         _pageController = TransformerPageController(
@@ -540,6 +546,12 @@ class _TransformerPageViewState extends State<TransformerPageView> {
           itemCount: widget.itemCount,
           loop: widget.loop,
           reverse: widget.transformer?.reverse ?? false,
+        );
+        _ownsPageController = true;
+      }
+      if (ownedPrevious) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => previousController.dispose(),
         );
       }
     }
@@ -560,7 +572,7 @@ class _TransformerPageViewState extends State<TransformerPageView> {
       }
     }
     if (_transformer != null) {
-      _ambiguate(WidgetsBinding.instance)!.addPostFrameCallback(_onGetSize);
+      WidgetsBinding.instance.addPostFrameCallback(_onGetSize);
     }
 
     if (_controller != widget.controller) {
@@ -574,7 +586,7 @@ class _TransformerPageViewState extends State<TransformerPageView> {
   @override
   void didChangeDependencies() {
     if (_transformer != null) {
-      _ambiguate(WidgetsBinding.instance)!.addPostFrameCallback(_onGetSize);
+      WidgetsBinding.instance.addPostFrameCallback(_onGetSize);
     }
     super.didChangeDependencies();
   }
@@ -618,15 +630,9 @@ class _TransformerPageViewState extends State<TransformerPageView> {
   @override
   void dispose() {
     _controller?.removeListener(onChangeNotifier);
+    if (_ownsPageController) {
+      _pageController.dispose();
+    }
     super.dispose();
   }
 }
-
-/// Ref: https://docs.flutter.dev/development/tools/sdk/release-notes/release-notes-3.0.0#your-code
-/// This allows a value of type T or T?
-/// to be treated as a value of type T?.
-///
-/// We use this so that APIs that have become
-/// non-nullable can still be used with `!` and `?`
-/// to support older versions of the API as well.
-T? _ambiguate<T>(T? value) => value;

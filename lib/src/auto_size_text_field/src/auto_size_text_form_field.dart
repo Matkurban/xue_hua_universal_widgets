@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'auto_size_text_field_fitter.dart';
+
 /// Flutter widget that automatically resizes text field to fit perfectly within its bounds.
 ///
 /// All size constraints as well as maxLines are taken into account. If the text
@@ -516,7 +518,6 @@ class AutoSizeTextFormField extends StatefulWidget {
 }
 
 class _AutoSizeTextFormFieldState extends State<AutoSizeTextFormField> {
-  late double _textSpanWidth;
   TextEditingController? _internalController;
 
   TextEditingController get _effectiveController =>
@@ -526,7 +527,7 @@ class _AutoSizeTextFormFieldState extends State<AutoSizeTextFormField> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, size) {
-        var defaultTextStyle = DefaultTextStyle.of(context);
+        final defaultTextStyle = DefaultTextStyle.of(context);
 
         var style = widget.style;
         if (widget.style == null || widget.style!.inherit) {
@@ -538,20 +539,95 @@ class _AutoSizeTextFormFieldState extends State<AutoSizeTextFormField> {
           );
         }
 
-        var maxLines = widget.maxLines ?? defaultTextStyle.maxLines;
-        _sanityCheck();
+        final maxLines = widget.maxLines ?? defaultTextStyle.maxLines;
+        AutoSizeTextFieldFitter.sanityCheck(
+          key: widget.key,
+          textFieldKey: widget.textFieldKey,
+          presetFontSizes: widget.presetFontSizes,
+          stepGranularity: widget.stepGranularity,
+          minFontSize: widget.minFontSize,
+          maxFontSize: widget.maxFontSize,
+        );
 
-        var result = _calculateFontSize(size, style, maxLines);
-        var fontSize = result[0] as double;
-        var textFits = result[1] as bool;
+        final fitResult = AutoSizeTextFieldFitter.calculateFontSize(
+          context: context,
+          constraints: size,
+          style: style,
+          maxLines: maxLines,
+          textSpan: widget.textSpan,
+          data: widget.data,
+          presetFontSizes: widget.presetFontSizes,
+          minFontSize: widget.minFontSize,
+          maxFontSize: widget.maxFontSize,
+          stepGranularity: widget.stepGranularity,
+          decoration: widget.decoration,
+          wrapWords: widget.wrapWords,
+          textAlign: widget.textAlign,
+          textDirection: widget.textDirection,
+          locale: widget.locale,
+          strutStyle: widget.strutStyle,
+          minWidth: widget.minWidth,
+        );
 
-        Widget textField;
-        textField = _buildTextField(fontSize, style, maxLines);
-        if (widget.overflowReplacement != null && !textFits) {
+        if (widget.overflowReplacement != null && !fitResult.textFits) {
           return widget.overflowReplacement!;
-        } else {
-          return textField;
         }
+
+        return SizedBox(
+          width: widget.fullwidth
+              ? double.infinity
+              : math.max(fitResult.fontSize, fitResult.textSpanWidth),
+          child: TextFormField(
+            key: widget.textFieldKey,
+            autovalidateMode: widget.autovalidateMode,
+            autocorrect: widget.autocorrect,
+            autofillHints: widget.autofillHints,
+            autofocus: widget.autofocus,
+            buildCounter: widget.buildCounter,
+            controller: _effectiveController,
+            cursorColor: widget.cursorColor,
+            cursorRadius: widget.cursorRadius,
+            cursorWidth: widget.cursorWidth,
+            decoration: widget.decoration,
+            enabled: widget.enabled,
+            enableInteractiveSelection: widget.enableInteractiveSelection,
+            enableSuggestions: widget.enableSuggestions,
+            expands: widget.expands,
+            focusNode: widget.focusNode,
+            initialValue: widget.initialValue,
+            inputFormatters: widget.inputFormatters,
+            keyboardAppearance: widget.keyboardAppearance,
+            keyboardType: widget.keyboardType,
+            maxLength: widget.maxLength,
+            maxLengthEnforcement: widget.maxLengthEnforcement,
+            maxLines: widget.maxLines,
+            minLines: widget.minLines,
+            obscureText: widget.obscureText,
+            onFieldSubmitted: widget.onFieldSubmitted,
+            onChanged: widget.onChanged,
+            onEditingComplete: widget.onEditingComplete,
+            onTap: widget.onTap,
+            onTapOutside: widget.onTapOutside,
+            onSaved: widget.onSaved,
+            readOnly: widget.readOnly,
+            scrollController: widget.scrollController,
+            scrollPadding: widget.scrollPadding,
+            scrollPhysics: widget.scrollPhysics,
+            showCursor: widget.showCursor,
+            smartDashesType: widget.smartDashesType,
+            smartQuotesType: widget.smartQuotesType,
+            strutStyle: widget.strutStyle,
+            style: style.copyWith(fontSize: fitResult.fontSize),
+            textAlign: widget.textAlign,
+            textAlignVertical: widget.textAlignVertical,
+            textCapitalization: widget.textCapitalization,
+            textDirection: widget.textDirection,
+            textInputAction: widget.textInputAction,
+            contextMenuBuilder: widget.contextMenuBuilder,
+            validator: widget.validator,
+            selectionControls: widget.selectionControls,
+          ),
+        );
       },
     );
   }
@@ -592,278 +668,5 @@ class _AutoSizeTextFormFieldState extends State<AutoSizeTextFormField> {
 
   void _onTextChanged() {
     if (mounted) setState(() {});
-  }
-
-  Widget _buildTextField(double fontSize, TextStyle style, int? maxLines) {
-    return SizedBox(
-      width: widget.fullwidth
-          ? double.infinity
-          : math.max(
-              fontSize,
-              _textSpanWidth *
-                  MediaQuery.of(context).textScaler.scale(fontSize),
-            ),
-      child: TextFormField(
-        key: widget.textFieldKey,
-        autovalidateMode: widget.autovalidateMode,
-        autocorrect: widget.autocorrect,
-        autofillHints: widget.autofillHints,
-        autofocus: widget.autofocus,
-        buildCounter: widget.buildCounter,
-        controller: _effectiveController,
-        cursorColor: widget.cursorColor,
-        cursorRadius: widget.cursorRadius,
-        cursorWidth: widget.cursorWidth,
-        decoration: widget.decoration,
-        enabled: widget.enabled,
-        enableInteractiveSelection: widget.enableInteractiveSelection,
-        enableSuggestions: widget.enableSuggestions,
-        expands: widget.expands,
-        focusNode: widget.focusNode,
-        initialValue: widget.initialValue,
-        inputFormatters: widget.inputFormatters,
-        keyboardAppearance: widget.keyboardAppearance,
-        keyboardType: widget.keyboardType,
-        maxLength: widget.maxLength,
-        maxLengthEnforcement: widget.maxLengthEnforcement,
-        maxLines: widget.maxLines,
-        minLines: widget.minLines,
-        obscureText: widget.obscureText,
-        onFieldSubmitted: widget.onFieldSubmitted,
-        onChanged: widget.onChanged,
-        onEditingComplete: widget.onEditingComplete,
-        onTap: widget.onTap,
-        onTapOutside: widget.onTapOutside,
-        onSaved: widget.onSaved,
-        readOnly: widget.readOnly,
-        scrollController: widget.scrollController,
-        scrollPadding: widget.scrollPadding,
-        scrollPhysics: widget.scrollPhysics,
-        showCursor: widget.showCursor,
-        smartDashesType: widget.smartDashesType,
-        smartQuotesType: widget.smartQuotesType,
-        strutStyle: widget.strutStyle,
-        style: style.copyWith(fontSize: fontSize),
-        textAlign: widget.textAlign,
-        textAlignVertical: widget.textAlignVertical,
-        textCapitalization: widget.textCapitalization,
-        textDirection: widget.textDirection,
-        textInputAction: widget.textInputAction,
-        contextMenuBuilder: widget.contextMenuBuilder,
-        validator: widget.validator,
-        selectionControls: widget.selectionControls,
-      ),
-    );
-  }
-
-  List _calculateFontSize(
-    BoxConstraints size,
-    TextStyle? style,
-    int? maxLines,
-  ) {
-    var span = TextSpan(
-      style: widget.textSpan?.style ?? style,
-      text: widget.textSpan?.text ?? widget.data,
-      children: widget.textSpan?.children,
-      recognizer: widget.textSpan?.recognizer,
-    );
-
-    var userScale = MediaQuery.textScalerOf(context).scale(1.0);
-
-    int left;
-    int right;
-
-    var presetFontSizes = widget.presetFontSizes?.reversed.toList();
-    if (presetFontSizes == null) {
-      num defaultFontSize = style!.fontSize!.clamp(
-        widget.minFontSize,
-        widget.maxFontSize,
-      );
-      var defaultScale = defaultFontSize * userScale / style.fontSize!;
-      if (_checkTextFits(span, defaultScale, maxLines, size)) {
-        return [defaultFontSize * userScale, true];
-      }
-
-      left = (widget.minFontSize / widget.stepGranularity).floor();
-      right = (defaultFontSize / widget.stepGranularity).ceil();
-    } else {
-      left = 0;
-      right = presetFontSizes.length - 1;
-    }
-
-    var lastValueFits = false;
-    while (left <= right) {
-      var mid = (left + (right - left) / 2).toInt();
-      double scale;
-      if (presetFontSizes == null) {
-        scale = mid * userScale * widget.stepGranularity / style!.fontSize!;
-      } else {
-        scale = presetFontSizes[mid] * userScale / style!.fontSize!;
-      }
-
-      if (_checkTextFits(span, scale, maxLines, size)) {
-        left = mid + 1;
-        lastValueFits = true;
-      } else {
-        right = mid - 1;
-        if (maxLines == null) left = right - 1;
-      }
-    }
-
-    if (!lastValueFits) {
-      right += 1;
-    }
-
-    double fontSize;
-    if (presetFontSizes == null) {
-      fontSize = right * userScale * widget.stepGranularity;
-    } else {
-      fontSize = presetFontSizes[right] * userScale;
-    }
-
-    return [fontSize, lastValueFits];
-  }
-
-  bool _checkTextFits(
-    TextSpan text,
-    double scale,
-    int? maxLines,
-    BoxConstraints constraints,
-  ) {
-    double constraintWidth = constraints.maxWidth;
-    double constraintHeight = constraints.maxHeight;
-    if (widget.decoration.contentPadding != null) {
-      constraintWidth -= widget.decoration.contentPadding!.horizontal;
-      constraintHeight -= widget.decoration.contentPadding!.vertical;
-    }
-
-    if (!widget.wrapWords) {
-      List<String?> words = text.toPlainText().split(RegExp('\\s+'));
-
-      // Adds prefix and suffix text
-      if (widget.decoration.prefixText != null) {
-        words.add(widget.decoration.prefixText);
-      }
-      if (widget.decoration.suffixText != null) {
-        words.add(widget.decoration.suffixText);
-      }
-
-      var wordWrapTp = TextPainter(
-        text: TextSpan(style: text.style, text: words.join('\n')),
-        textAlign: widget.textAlign,
-        textDirection: widget.textDirection ?? TextDirection.ltr,
-        textScaler: TextScaler.linear(scale),
-        maxLines: words.length,
-        locale: widget.locale,
-        strutStyle: widget.strutStyle,
-      );
-
-      wordWrapTp.layout(maxWidth: constraintWidth);
-      double width = (widget.decoration.contentPadding != null)
-          ? wordWrapTp.width + widget.decoration.contentPadding!.horizontal
-          : wordWrapTp.width;
-      _textSpanWidth = math.max(width, widget.minWidth ?? 0);
-
-      if (wordWrapTp.didExceedMaxLines ||
-          wordWrapTp.width > constraints.maxWidth) {
-        return false;
-      }
-    }
-
-    String word = text.toPlainText();
-
-    if (word.isNotEmpty) {
-      // replace all \n with 'space with \n' to prevent dropping last character to new line
-      var textContents = text.text ?? '';
-      word = textContents.replaceAll('\n', ' \n');
-      // \n is 10, <space> is 32
-      if (textContents.codeUnitAt(textContents.length - 1) != 10 &&
-          textContents.codeUnitAt(textContents.length - 1) != 32) {
-        word += ' ';
-      }
-    }
-
-    // Adds prefix and suffix text
-    word += widget.decoration.prefixText ?? '';
-    word += widget.decoration.suffixText ?? '';
-
-    var tp = TextPainter(
-      text: TextSpan(
-        text: word,
-        recognizer: text.recognizer,
-        children: text.children,
-        semanticsLabel: text.semanticsLabel,
-        style: text.style,
-      ),
-      textAlign: widget.textAlign,
-      textDirection: widget.textDirection ?? TextDirection.ltr,
-      textScaler: TextScaler.linear(scale),
-      maxLines: maxLines,
-      locale: widget.locale,
-      strutStyle: widget.strutStyle,
-    );
-
-    tp.layout(maxWidth: constraintWidth);
-    double width = (widget.decoration.contentPadding != null)
-        ? tp.width + widget.decoration.contentPadding!.horizontal
-        : tp.width;
-
-    double height = (widget.decoration.contentPadding != null)
-        ? tp.height + widget.decoration.contentPadding!.vertical
-        : tp.height;
-
-    _textSpanWidth = math.max(width, widget.minWidth ?? 0);
-
-    if (maxLines == null) {
-      if (height >= constraintHeight) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      if (width >= constraintWidth) {
-        return false;
-      } else {
-        return true;
-      }
-    }
-  }
-
-  void _sanityCheck() {
-    assert(
-      widget.key == null || widget.key != widget.textFieldKey,
-      'Key and textKey cannot be the same.',
-    );
-
-    if (widget.presetFontSizes == null) {
-      assert(
-        widget.stepGranularity >= 0.1,
-        'StepGranularity has to be greater than or equal to 0.1. It is not a good idea to resize the font with a higher accuracy.',
-      );
-      assert(
-        widget.minFontSize >= 0,
-        'MinFontSize has to be greater than or equal to 0.',
-      );
-      assert(widget.maxFontSize > 0, 'MaxFontSize has to be greater than 0.');
-      assert(
-        widget.minFontSize <= widget.maxFontSize,
-        'MinFontSize has to be smaller or equal than maxFontSize.',
-      );
-      assert(
-        widget.minFontSize / widget.stepGranularity % 1 == 0,
-        'MinFontSize has to be multiples of stepGranularity.',
-      );
-      if (widget.maxFontSize != double.infinity) {
-        assert(
-          widget.maxFontSize / widget.stepGranularity % 1 == 0,
-          'MaxFontSize has to be multiples of stepGranularity.',
-        );
-      }
-    } else {
-      assert(
-        widget.presetFontSizes!.isNotEmpty,
-        'PresetFontSizes has to be nonempty.',
-      );
-    }
   }
 }

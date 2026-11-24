@@ -19,6 +19,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
   final double mLineStrokeWidth = 1.0;
   double scaleX;
   late Paint mLinePaint;
+  late final Paint _labelBgPaint;
   final double mBottomPadding;
 
   MainRenderer(
@@ -48,6 +49,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
       ..style = PaintingStyle.stroke
       ..strokeWidth = mLineStrokeWidth
       ..color = chartColors.kLineColor;
+    _labelBgPaint = Paint()..color = chartColors.bgColor.withAlpha(80);
     _contentRect = Rect.fromLTRB(
       chartRect.left,
       chartRect.top + _contentPadding,
@@ -71,7 +73,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
         fixedLength,
         chartColors,
       );
-      if (span == null) return;
+      if (span == null) continue;
       TextPainter tp = TextPainter(
         text: span,
         textDirection: TextDirection.ltr,
@@ -87,12 +89,12 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
           tp.width + offset.dx + 2,
           tp.height + offset.dy + 2,
         ),
-        Paint()..color = chartColors.bgColor.withAlpha(80),
+        _labelBgPaint,
       );
 
       tp.paint(canvas, offset);
-
       y = y + tp.height + 2.0; // update y
+      tp.dispose();
     }
   }
 
@@ -266,12 +268,12 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
           Offset(offsetX, rowSpace * i - tp.height + topPadding),
         );
       }
+      tp.dispose();
     }
   }
 
   @override
   void drawGrid(Canvas canvas, int gridRows, int gridColumns) {
-    //    final int gridRows = 4, gridColumns = 4;
     double rowSpace = chartRect.height / gridRows;
     for (int i = 0; i <= gridRows; i++) {
       canvas.drawLine(
@@ -281,7 +283,7 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
       );
     }
     double columnSpace = chartRect.width / gridColumns;
-    for (int i = 0; i <= columnSpace; i++) {
+    for (int i = 0; i <= gridColumns; i++) {
       canvas.drawLine(
         Offset(columnSpace * i, 0),
         Offset(columnSpace * i, chartRect.bottom),
@@ -290,13 +292,13 @@ class MainRenderer extends BaseChartRenderer<CandleEntity> {
     }
 
     /// draw top grid
-    canvas.drawLine(Offset(0, 0), Offset(chartRect.width, 0), gridPaint..color);
+    canvas.drawLine(Offset.zero, Offset(chartRect.width, 0), gridPaint);
 
     /// draw bottom grid
     canvas.drawLine(
       Offset(0, chartRect.bottom + mBottomPadding),
       Offset(chartRect.width, chartRect.bottom + mBottomPadding),
-      gridPaint..color,
+      gridPaint,
     );
   }
 

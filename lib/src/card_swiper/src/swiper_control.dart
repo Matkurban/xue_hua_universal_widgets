@@ -13,40 +13,105 @@ class SwiperControl extends SwiperPlugin {
     this.padding = const EdgeInsets.all(5.0),
   });
 
-  ///IconData for previous
+  /// IconData for previous
   final IconData iconPrevious;
 
-  ///iconData for next
+  /// IconData for next
   final IconData iconNext;
 
-  ///icon size
+  /// Icon size
   final double size;
 
-  ///Icon normal color, The theme's [ThemeData.primaryColor] by default.
+  /// Icon normal color, the theme's [ThemeData.primaryColor] by default.
   final Color? color;
 
-  ///if set loop=false on Swiper, this color will be used when swiper goto the last slide.
-  ///The theme's [ThemeData.disabledColor] by default.
+  /// If set loop=false on Swiper, this color will be used when swiper reaches the boundary.
+  /// The theme's [ThemeData.disabledColor] by default.
   final Color? disableColor;
 
   final EdgeInsetsGeometry padding;
 
   final Key? key;
 
-  Widget buildButton({
-    required SwiperPluginConfig? config,
-    required Color color,
-    required IconData iconData,
-    required int quarterTurns,
-    required bool previous,
-  }) {
+  @override
+  Widget build(BuildContext context, SwiperPluginConfig config) {
+    final themeData = Theme.of(context);
+
+    final activeColor = color ?? themeData.primaryColor;
+    final disabledColor = disableColor ?? themeData.disabledColor;
+    final Color prevColor;
+    final Color nextColor;
+
+    if (config.loop) {
+      prevColor = nextColor = activeColor;
+    } else {
+      final hasNext = config.activeIndex < config.itemCount - 1;
+      final hasPrev = config.activeIndex > 0;
+      prevColor = hasPrev ? activeColor : disabledColor;
+      nextColor = hasNext ? activeColor : disabledColor;
+    }
+
+    final isHorizontal = config.scrollDirection == Axis.horizontal;
+    final quarterTurns = isHorizontal ? 0 : -3;
+
+    return SizedBox.expand(
+      child: Flex(
+        key: key,
+        direction: config.scrollDirection,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          _SwiperControlButton(
+            controller: config.controller,
+            color: prevColor,
+            iconData: iconPrevious,
+            quarterTurns: quarterTurns,
+            previous: true,
+            size: size,
+            padding: padding,
+          ),
+          _SwiperControlButton(
+            controller: config.controller,
+            color: nextColor,
+            iconData: iconNext,
+            quarterTurns: quarterTurns,
+            previous: false,
+            size: size,
+            padding: padding,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwiperControlButton extends StatelessWidget {
+  const _SwiperControlButton({
+    required this.controller,
+    required this.color,
+    required this.iconData,
+    required this.quarterTurns,
+    required this.previous,
+    required this.size,
+    required this.padding,
+  });
+
+  final SwiperController controller;
+  final Color color;
+  final IconData iconData;
+  final int quarterTurns;
+  final bool previous;
+  final double size;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () async {
         if (previous) {
-          await config!.controller.previous(animation: true);
+          await controller.previous(animation: true);
         } else {
-          await config!.controller.next(animation: true);
+          await controller.next(animation: true);
         }
       },
       child: Padding(
@@ -62,71 +127,5 @@ class SwiperControl extends SwiperPlugin {
         ),
       ),
     );
-  }
-
-  @override
-  Widget build(BuildContext context, SwiperPluginConfig config) {
-    final themeData = Theme.of(context);
-
-    final color = this.color ?? themeData.primaryColor;
-    final disableColor = this.disableColor ?? themeData.disabledColor;
-    Color prevColor;
-    Color nextColor;
-
-    if (config.loop) {
-      prevColor = nextColor = color;
-    } else {
-      final next = config.activeIndex < config.itemCount - 1;
-      final prev = config.activeIndex > 0;
-      prevColor = prev ? color : disableColor;
-      nextColor = next ? color : disableColor;
-    }
-
-    Widget child;
-    if (config.scrollDirection == Axis.horizontal) {
-      child = Row(
-        key: key,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          buildButton(
-            config: config,
-            color: prevColor,
-            iconData: iconPrevious,
-            quarterTurns: 0,
-            previous: true,
-          ),
-          buildButton(
-            config: config,
-            color: nextColor,
-            iconData: iconNext,
-            quarterTurns: 0,
-            previous: false,
-          ),
-        ],
-      );
-    } else {
-      child = Column(
-        key: key,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          buildButton(
-            config: config,
-            color: prevColor,
-            iconData: iconPrevious,
-            quarterTurns: -3,
-            previous: true,
-          ),
-          buildButton(
-            config: config,
-            color: nextColor,
-            iconData: iconNext,
-            quarterTurns: -3,
-            previous: false,
-          ),
-        ],
-      );
-    }
-
-    return SizedBox.expand(child: child);
   }
 }

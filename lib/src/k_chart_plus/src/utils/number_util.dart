@@ -2,17 +2,27 @@ import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 
 class NumberUtil {
+  static final Map<String, NumberFormat> _formatCache =
+      <String, NumberFormat>{};
+
+  static NumberFormat _formatterFor(String pattern) {
+    return _formatCache.putIfAbsent(
+      pattern,
+      () => NumberFormat(pattern, 'en_US'),
+    );
+  }
+
   static String formatCompact(double n, [int precision = 2]) {
     try {
       if (n >= 1e9) {
         n /= 1e9;
-        return "${n.toStringAsFixed(precision)}B";
+        return '${n.toStringAsFixed(precision)}B';
       } else if (n >= 1e6) {
         n /= 1e6;
-        return "${n.toStringAsFixed(precision)}M";
+        return '${n.toStringAsFixed(precision)}M';
       } else if (n >= 1e4) {
         n /= 1e3;
-        return "${n.toStringAsFixed(precision)}K";
+        return '${n.toStringAsFixed(precision)}K';
       } else {
         return n.toStringAsFixed(precision);
       }
@@ -21,27 +31,10 @@ class NumberUtil {
     }
   }
 
-  // static int getDecimalLength(double b) {
-  //   String s = b.toString();
-  //   int dotIndex = s.indexOf(".");
-  //   if (dotIndex < 0) {
-  //     return 0;
-  //   } else {
-  //     return s.length - dotIndex - 1;
-  //   }
-  // }
-  //
-  // static int getMaxDecimalLength(double a, double b, double c, double d) {
-  //   int result = max(getDecimalLength(a), getDecimalLength(b));
-  //   result = max(result, getDecimalLength(c));
-  //   result = max(result, getDecimalLength(d));
-  //   return result;
-  // }
-
   static bool checkNotNullOrZero(double? a) {
     if (a == null || a == 0) {
       return false;
-    } else if (a.abs().toStringAsFixed(4) == "0.0000") {
+    } else if (a.abs().toStringAsFixed(4) == '0.0000') {
       return false;
     } else {
       return true;
@@ -54,13 +47,11 @@ class NumberUtil {
     String pattern = '#,##0',
   ]) {
     try {
-      String number = Decimal.parse(value.toString())
-          .toString(); // avoid scientific notation format e-10
-      List<String> parts = number.split('.');
-      String integerPart = NumberFormat(
-        pattern,
-        'en_US',
-      ).format(num.parse(parts.first));
+      // avoid scientific notation format e-10
+      final String number = Decimal.parse(value.toString()).toString();
+      final List<String> parts = number.split('.');
+      final String integerPart = _formatterFor(pattern)
+          .format(num.parse(parts.first));
       if (precision == 0) {
         return integerPart;
       }
@@ -82,18 +73,16 @@ class NumberUtil {
   ]) {
     try {
       // avoid scientific notation format e-10
-      String number = Decimal.parse(value.toString())
+      final String number = Decimal.parse(value.toString())
           .floor(scale: precision)
           .toString();
-      List<String> parts = number.split('.');
-      String integerPart = NumberFormat(
-        pattern,
-        'en_US',
-      ).format(num.parse(parts.first));
+      final List<String> parts = number.split('.');
+      final String integerPart = _formatterFor(pattern)
+          .format(num.parse(parts.first));
       if (precision == 0 && parts.length == 1) {
         return integerPart;
       }
-      String fractionalPart = parts.last;
+      final String fractionalPart = parts.last;
       return '$integerPart.$fractionalPart';
     } catch (e) {
       return null;

@@ -10,6 +10,7 @@ class Boll {
 class BOLLIndicator extends MainIndicator<CandleEntity, BOLLStyle> {
   late final Paint _linePaint;
   late final Paint _fillPaint;
+  final Path _fillPath = Path();
 
   BOLLIndicator({BOLLStyle indicatorStyle = const BOLLStyle()})
     : super(
@@ -111,14 +112,15 @@ class BOLLIndicator extends MainIndicator<CandleEntity, BOLLStyle> {
     }
 
     if (positionLi.length == 4) {
-      Path fillPath = Path()
+      _fillPath
+        ..reset()
         ..moveTo(positionLi[0].dx, positionLi[0].dy)
         ..lineTo(positionLi[1].dx, positionLi[1].dy)
         ..lineTo(positionLi[2].dx, positionLi[2].dy)
         ..lineTo(positionLi[3].dx, positionLi[3].dy)
         ..close();
 
-      canvas.drawPath(fillPath, _fillPaint);
+      canvas.drawPath(_fillPath, _fillPaint);
     }
 
     if (curPoint.boll!.mid != null && lastPoint.boll!.mid != null) {
@@ -133,6 +135,7 @@ class BOLLIndicator extends MainIndicator<CandleEntity, BOLLStyle> {
 
   @override
   void calc(List<KLineEntity> dataList) {
+    if (dataList.isEmpty || calcParams.length < 2) return;
     int n = calcParams[0];
     int k = calcParams[1];
     _calcBOLLMA(n, dataList);

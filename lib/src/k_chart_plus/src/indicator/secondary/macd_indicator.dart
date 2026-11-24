@@ -81,40 +81,6 @@ class MACDIndicator extends SecondaryIndicator<MACDEntity, MACDStyle> {
   }
 
   @override
-  void drawVerticalText({
-    required Canvas canvas,
-    required TextStyle style,
-    required double maxValue,
-    required double minValue,
-    required int fixedLength,
-    required Rect chartRect,
-  }) {
-    TextPainter maxTp = TextPainter(
-      text: TextSpan(
-        text: NumberUtil.formatFixed(maxValue, fixedLength) ?? '',
-        style: style,
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    maxTp.layout();
-
-    TextPainter minTp = TextPainter(
-      text: TextSpan(
-        text: NumberUtil.formatFixed(minValue, fixedLength) ?? '',
-        style: style,
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    minTp.layout();
-
-    maxTp.paint(canvas, Offset(chartRect.width - maxTp.width, chartRect.top));
-    minTp.paint(
-      canvas,
-      Offset(chartRect.width - minTp.width, chartRect.bottom - minTp.height),
-    );
-  }
-
-  @override
   void drawChart(
     MACDEntity lastPoint,
     MACDEntity curPoint,
@@ -166,6 +132,7 @@ class MACDIndicator extends SecondaryIndicator<MACDEntity, MACDStyle> {
 
   @override
   void calc(List<KLineEntity> dataList) {
+    if (dataList.isEmpty || calcParams.length < 3) return;
     final params = calcParams;
     double closeSum = 0;
     double emaShort = 0;

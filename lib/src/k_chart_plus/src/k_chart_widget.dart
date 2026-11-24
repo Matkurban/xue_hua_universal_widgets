@@ -26,12 +26,11 @@ class KChartWidget extends StatefulWidget {
   final List<KLineEntity>? datas;
   final List<MainIndicator> mainIndicators;
 
-  ///warning only using MA, BOLL, SAR
+  /// warning only using MA, BOLL, SAR
   final bool volHidden;
   final List<SecondaryIndicator> secondaryIndicators;
 
-  ///SecondaryState { MACD, KDJ, RSI, WR, CCI }
-  // final Function()? onSecondaryTap;
+  /// SecondaryState { MACD, KDJ, RSI, WR, CCI }
   final bool isLine;
   final bool hideGrid;
   final bool showNowPrice;
@@ -81,18 +80,34 @@ class _KChartWidgetState extends State<KChartWidget>
       StreamController<InfoWindowEntity?>();
 
   /// Only created when the caller did not supply one.
-  late final InteractiveLayerController _controller =
-      widget.controller ?? InteractiveLayerController();
+  InteractiveLayerController? _internalController;
+  late InteractiveLayerController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller =
+        widget.controller ??
+        (_internalController = InteractiveLayerController());
     _controller.attach(this);
   }
 
   @override
   void didUpdateWidget(covariant KChartWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      _controller.detach();
+      final stale = _internalController;
+      if (widget.controller != null && stale != null) {
+        _internalController = null;
+        WidgetsBinding.instance.addPostFrameCallback((_) => stale.dispose());
+      }
+      _controller =
+          widget.controller ??
+          (_internalController ??= InteractiveLayerController());
+      _controller.attach(this);
+    }
+
     // A fresh (or emptied) data set invalidates the current zoom / pan.
     if ((widget.datas?.isEmpty ?? true) != (oldWidget.datas?.isEmpty ?? true)) {
       _controller.reset();
@@ -102,8 +117,7 @@ class _KChartWidgetState extends State<KChartWidget>
   @override
   void dispose() {
     _controller.detach();
-    if (widget.controller == null) _controller.dispose();
-    _mInfoWindowStream.sink.close();
+    _internalController?.dispose();
     _mInfoWindowStream.close();
     super.dispose();
   }
@@ -136,6 +150,8 @@ class _KChartWidgetState extends State<KChartWidget>
       fixedLength: widget.fixedLength,
     );
 
+    final detailBuilder = widget.detailBuilder;
+
     return RawGestureDetector(
       behavior: HitTestBehavior.opaque,
       gestures: <Type, GestureRecognizerFactory>{
@@ -165,33 +181,23 @@ class _KChartWidgetState extends State<KChartWidget>
               painter: painter,
             ),
           ),
-          if (widget.detailBuilder != null) _buildInfoDialog(),
+          if (detailBuilder != null)
+            StreamBuilder<InfoWindowEntity?>(
+              stream: _mInfoWindowStream.stream,
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                if (widget.isLine || info == null) {
+                  return const SizedBox.shrink();
+                }
+                final entity = info.kLineEntity;
+                if (info.isLeft) {
+                  return Positioned(left: 10.0, child: detailBuilder(entity));
+                }
+                return Positioned(right: 10.0, child: detailBuilder(entity));
+              },
+            ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoDialog() {
-    return StreamBuilder<InfoWindowEntity?>(
-      stream: _mInfoWindowStream.stream,
-      builder: (context, snapshot) {
-        if (widget.isLine == true ||
-            !snapshot.hasData ||
-            snapshot.data?.kLineEntity == null) {
-          return const SizedBox();
-        }
-        KLineEntity entity = snapshot.data!.kLineEntity;
-        if (snapshot.data!.isLeft) {
-          return Positioned(
-            left: 10.0,
-            child: widget.detailBuilder!.call(entity),
-          );
-        }
-        return Positioned(
-          right: 10.0,
-          child: widget.detailBuilder!.call(entity),
-        );
-      },
     );
   }
 }

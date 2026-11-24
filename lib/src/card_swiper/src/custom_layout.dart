@@ -1,9 +1,99 @@
 part of 'swiper.dart';
 
+sealed class _ItemTransform {
+  const _ItemTransform();
+}
+
+final class _MatrixItemTransform extends _ItemTransform {
+  const _MatrixItemTransform({
+    required this.opacity,
+    required this.offset,
+    required this.scale,
+    required this.alignment,
+    this.angle,
+  });
+
+  final double opacity;
+  final double? angle;
+  final Offset offset;
+  final double scale;
+  final Alignment alignment;
+}
+
+final class _BuildersItemTransform extends _ItemTransform {
+  const _BuildersItemTransform({
+    required this.builders,
+    required this.index,
+    required this.animationValue,
+  });
+
+  final List<TransformBuilder<dynamic>> builders;
+  final int index;
+  final double animationValue;
+}
+
+class _CustomLayoutSwiperItem extends StatelessWidget {
+  const _CustomLayoutSwiperItem({
+    required this.itemKeyValue,
+    required this.transform,
+    required this.itemWidth,
+    required this.itemHeight,
+    required this.child,
+  });
+
+  final int itemKeyValue;
+  final _ItemTransform transform;
+  final double? itemWidth;
+  final double? itemHeight;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizedChild = SizedBox(
+      width: itemWidth ?? double.infinity,
+      height: itemHeight ?? double.infinity,
+      child: child,
+    );
+
+    switch (transform) {
+      case _MatrixItemTransform(
+        :final opacity,
+        :final angle,
+        :final offset,
+        :final scale,
+        :final alignment,
+      ):
+        Widget content = Transform.translate(
+          key: ValueKey<int>(itemKeyValue),
+          offset: offset,
+          child: Transform.scale(
+            scale: scale,
+            alignment: alignment,
+            child: sizedChild,
+          ),
+        );
+        if (angle != null) {
+          content = Transform.rotate(angle: angle, child: content);
+        }
+        return Opacity(opacity: opacity.clamp(0.0, 1.0), child: content);
+      case _BuildersItemTransform(
+        :final builders,
+        :final index,
+        :final animationValue,
+      ):
+        Widget content = sizedChild;
+        for (var i = builders.length - 1; i >= 0; --i) {
+          content = builders[i].build(index, animationValue, content);
+        }
+        return content;
+    }
+  }
+}
+
 abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
     with SingleTickerProviderStateMixin {
-  late double _swiperWidth;
-  late double _swiperHeight;
+  double _swiperWidth = 0;
+  double _swiperHeight = 0;
   late Animation<double> _animation;
   late AnimationController _animationController;
   SwiperController get _controller => widget.controller;
@@ -34,7 +124,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
 
   @override
   void didChangeDependencies() {
-    _ambiguate(WidgetsBinding.instance)!.addPostFrameCallback(_getSize);
+    WidgetsBinding.instance.addPostFrameCallback(_getSize);
     super.didChangeDependencies();
   }
 
@@ -45,7 +135,8 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
 
   @mustCallSuper
   void afterRender() {
-    final renderObject = context.findRenderObject()!;
+    final renderObject = context.findRenderObject();
+    if (renderObject == null) return;
     final size = renderObject.paintBounds.size;
     _swiperWidth = size.width;
     _swiperHeight = size.height;
@@ -60,7 +151,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
     }
 
     if (widget.loop != oldWidget.loop) {
-      if (!widget.loop) {
+      if (!widget.loop && widget.itemCount > 0) {
         _currentIndex = _ensureIndex(_currentIndex);
       }
     }
@@ -73,8 +164,8 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   }
 
   int _ensureIndex(int index) {
-    var res = index;
-    res = index % widget.itemCount;
+    if (widget.itemCount <= 0) return 0;
+    var res = index % widget.itemCount;
     if (res < 0) {
       res += widget.itemCount;
     }
@@ -88,57 +179,65 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
     super.dispose();
   }
 
-  Widget _buildItem(int i, int realIndex, double animationValue);
-
-  Widget _buildContainer(List<Widget> list) {
-    return Stack(children: list);
-  }
-
-  Widget _buildAnimation(BuildContext context, Widget? w) {
-    final list = <Widget>[];
-
-    final animationValue = _animation.value;
-
-    for (var i = 0; i < _animationCount! && widget.itemCount > 0; ++i) {
-      final itemIndex = _currentIndex + i + _startIndex;
-      if (!widget.loop && (itemIndex >= widget.itemCount || itemIndex < 0)) {
-        continue;
-      }
-
-      var realIndex = itemIndex % widget.itemCount;
-      if (realIndex < 0) {
-        realIndex += widget.itemCount;
-      }
-
-      if (widget.axisDirection == AxisDirection.right) {
-        list.insert(0, _buildItem(i, realIndex, animationValue));
-      } else {
-        list.add(_buildItem(i, realIndex, animationValue));
-      }
-    }
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onPanStart: _allowScrolling ? _onPanStart : null,
-      onPanEnd: _allowScrolling ? _onPanEnd : null,
-      onPanUpdate: _allowScrolling ? _onPanUpdate : null,
-      child: ClipRect(child: Center(child: _buildContainer(list))),
-    );
-  }
+  _ItemTransform _itemTransform(int i, double animationValue);
 
   @override
   Widget build(BuildContext context) {
-    if (_animationCount == null) {
-      return Container();
+    final animationCount = _animationCount;
+    if (animationCount == null) {
+      return const SizedBox.shrink();
     }
     return AnimatedBuilder(
       animation: _animationController,
-      builder: _buildAnimation,
+      builder: (BuildContext context, Widget? _) {
+        final list = <Widget>[];
+        final animationValue = _animation.value;
+        final itemCount = widget.itemCount;
+        final itemBuilder = widget.itemBuilder;
+
+        for (var i = 0; i < animationCount && itemCount > 0; ++i) {
+          final itemIndex = _currentIndex + i + _startIndex;
+          if (!widget.loop && (itemIndex >= itemCount || itemIndex < 0)) {
+            continue;
+          }
+
+          var realIndex = itemIndex % itemCount;
+          if (realIndex < 0) {
+            realIndex += itemCount;
+          }
+
+          final itemWidget = _CustomLayoutSwiperItem(
+            itemKeyValue: _currentIndex + i,
+            transform: _itemTransform(i, animationValue),
+            itemWidth: widget.itemWidth,
+            itemHeight: widget.itemHeight,
+            child: itemBuilder != null
+                ? itemBuilder(context, realIndex)
+                : const SizedBox.shrink(),
+          );
+
+          if (widget.axisDirection == AxisDirection.right) {
+            list.insert(0, itemWidget);
+          } else {
+            list.add(itemWidget);
+          }
+        }
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onPanStart: _allowScrolling ? _onPanStart : null,
+          onPanEnd: _allowScrolling ? _onPanEnd : null,
+          onPanUpdate: _allowScrolling ? _onPanUpdate : null,
+          child: ClipRect(
+            child: Center(child: Stack(children: list)),
+          ),
+        );
+      },
     );
   }
 
-  late double _currentValue;
-  late double _currentPos;
+  double _currentValue = 0.5;
+  double _currentPos = 0.0;
 
   bool _lockScroll = false;
 
@@ -148,11 +247,13 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
       _lockScroll = true;
       await _animationController.animateTo(
         position,
-        duration: Duration(milliseconds: widget.duration!),
+        duration: Duration(
+          milliseconds: widget.duration ?? kDefaultAutoplayTransactionDuration,
+        ),
         curve: widget.curve,
       );
       if (nextIndex != null) {
-        widget.onIndexChanged!(widget.getCorrectIndex(nextIndex));
+        widget.onIndexChanged?.call(widget.getCorrectIndex(nextIndex));
       }
     } catch (e, st) {
       log('error animating _animationController', error: e, stackTrace: st);
@@ -193,12 +294,20 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
         loop: widget.loop,
         reverse: false,
       );
-      if (_currentIndex == newIndex) return;
-      return _move(event.targetPosition, nextIndex: newIndex);
+      if (_currentIndex == newIndex) {
+        event.complete();
+        return;
+      }
+      await _move(event.targetPosition, nextIndex: newIndex);
+      event.complete();
     } else if (event is MoveIndexControllerEvent) {
       final newIndex = _getProperNewIndex(event.newIndex);
-      if (_currentIndex == newIndex) return;
-      return _move(event.targetPosition, nextIndex: newIndex);
+      if (_currentIndex == newIndex) {
+        event.complete();
+        return;
+      }
+      await _move(event.targetPosition, nextIndex: newIndex);
+      event.complete();
     }
   }
 
@@ -233,7 +342,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (_lockScroll) return;
+    if (_lockScroll || _swiperWidth <= 0) return;
     var value =
         _currentValue +
         ((widget.scrollDirection == Axis.horizontal
@@ -313,7 +422,7 @@ class ScaleTransformBuilder extends TransformBuilder<double> {
   @override
   Widget build(int i, double animationValue, Widget widget) {
     final s = _getValue(values, animationValue, i);
-    return Transform.scale(scale: s, child: widget);
+    return Transform.scale(scale: s, alignment: alignment, child: widget);
   }
 }
 
@@ -322,7 +431,7 @@ class OpacityTransformBuilder extends TransformBuilder<double> {
 
   @override
   Widget build(int i, double animationValue, Widget widget) {
-    final v = _getValue(values, animationValue, i);
+    final v = _getValue(values, animationValue, i).clamp(0.0, 1.0);
     return Opacity(opacity: v, child: widget);
   }
 }
@@ -413,29 +522,11 @@ class _CustomLayoutState extends _CustomLayoutStateBase<_CustomLayoutSwiper> {
   }
 
   @override
-  Widget _buildItem(int index, int realIndex, double animationValue) {
-    final builders = widget.option.builders;
-
-    Widget child = SizedBox(
-      width: widget.itemWidth ?? double.infinity,
-      height: widget.itemHeight ?? double.infinity,
-      child: widget.itemBuilder!(context, realIndex),
+  _ItemTransform _itemTransform(int index, double animationValue) {
+    return _BuildersItemTransform(
+      builders: widget.option.builders,
+      index: index,
+      animationValue: animationValue,
     );
-
-    for (var i = builders.length - 1; i >= 0; --i) {
-      final builder = builders[i];
-      child = builder.build(index, animationValue, child);
-    }
-
-    return child;
   }
 }
-
-/// Ref: https://docs.flutter.dev/development/tools/sdk/release-notes/release-notes-3.0.0#your-code
-/// This allows a value of type T or T?
-/// to be treated as a value of type T?.
-///
-/// We use this so that APIs that have become
-/// non-nullable can still be used with `!` and `?`
-/// to support older versions of the API as well.
-T? _ambiguate<T>(T? value) => value;

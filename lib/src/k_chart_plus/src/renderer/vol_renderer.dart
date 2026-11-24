@@ -102,6 +102,7 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
     TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
     tp.layout();
     tp.paint(canvas, Offset(x, chartRect.top - topPadding));
+    tp.dispose();
   }
 
   @override
@@ -119,6 +120,7 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
         chartRect.top - topPadding,
       ),
     );
+    tp.dispose();
   }
 
   @override
@@ -129,7 +131,7 @@ class VolRenderer extends BaseChartRenderer<VolumeEntity> {
       gridPaint,
     );
     double columnSpace = chartRect.width / gridColumns;
-    for (int i = 0; i <= columnSpace; i++) {
+    for (int i = 0; i <= gridColumns; i++) {
       //vol垂直线
       canvas.drawLine(
         Offset(columnSpace * i, chartRect.top - topPadding),

@@ -36,7 +36,7 @@ class AutoSizeGroup {
       _widgetsNotified = true;
     }
 
-    for (final textState in _listeners.keys) {
+    for (final textState in _listeners.keys.toList(growable: false)) {
       if (textState.mounted) {
         textState._notifySync();
       }

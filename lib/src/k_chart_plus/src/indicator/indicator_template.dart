@@ -97,5 +97,29 @@ abstract class SecondaryIndicator<T, K> extends IndicatorTemplate<T, K> {
     required double minValue,
     required int fixedLength,
     required Rect chartRect,
-  });
+  }) {
+    final maxTp = TextPainter(
+      text: TextSpan(
+        text: NumberUtil.formatFixed(maxValue, fixedLength) ?? '',
+        style: style,
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final minTp = TextPainter(
+      text: TextSpan(
+        text: NumberUtil.formatFixed(minValue, fixedLength) ?? '',
+        style: style,
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    maxTp.paint(canvas, Offset(chartRect.width - maxTp.width, chartRect.top));
+    minTp.paint(
+      canvas,
+      Offset(chartRect.width - minTp.width, chartRect.bottom - minTp.height),
+    );
+    maxTp.dispose();
+    minTp.dispose();
+  }
 }

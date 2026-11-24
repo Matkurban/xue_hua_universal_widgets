@@ -1,6 +1,11 @@
-import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:xue_hua_universal_widgets/xue_hua_universal_widgets.dart';
+
+import 'pages/auto_size_text_field_page.dart';
+import 'pages/auto_size_text_page.dart';
+import 'pages/card_swiper_page.dart';
+import 'pages/carousel_slider_page.dart';
+import 'pages/k_chart_plus_page.dart';
+import 'pages/read_more_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,383 +19,118 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF02BB9F),
-        primaryColorDark: const Color(0xFF167F67),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF02BB9F)),
+        useMaterial3: true,
       ),
-      title: 'Read More Text',
-      home: const DemoApp(),
+      title: 'XueHua Universal Widgets',
+      home: const ShowcaseHomePage(),
     );
   }
 }
 
-class DemoApp extends StatefulWidget {
-  const DemoApp({super.key});
-
-  @override
-  State<DemoApp> createState() => _DemoAppState();
-}
-
-class _DemoAppState extends State<DemoApp> {
-  final isCollapsed = ValueNotifier<bool>(false);
-
-  // K: UID, V: Username
-  final userMap = {123: 'Android', 456: 'iOS'};
-
-  var _trimMode = TrimMode.line;
-  int _trimLines = 3;
-  int _trimLength = 190;
-
-  void _incrementTrimLines() => setState(() => _trimLines++);
-
-  void _decrementTrimLines() =>
-      setState(() => _trimLines = _trimLines > 1 ? _trimLines - 1 : 1);
-
-  void _incrementTrimLength() => setState(() => _trimLength++);
-
-  void _decrementTrimLength() =>
-      setState(() => _trimLength = _trimLength > 1 ? _trimLength - 1 : 1);
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    isCollapsed.dispose();
-  }
+class ShowcaseHomePage extends StatelessWidget {
+  const ShowcaseHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Read More Text')),
-      body: DefaultTextStyle.merge(
-        style: const TextStyle(fontSize: 14),
-        child: DraggableDivider(
-          child: SingleChildScrollView(child: _buildContent()),
-        ),
+      appBar: AppBar(title: const Text('XueHua Universal Widgets')),
+      body: ListView(
+        padding: const EdgeInsets.all(12),
+        children: [
+          _ComponentNavCard(
+            icon: Icons.short_text,
+            title: 'ReadMoreText',
+            subtitle: '长度/行数折叠、正则注解(URL/@/#)、富文本、外部状态同步、可拖拽宽度测试',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ReadMorePage()),
+            ),
+          ),
+          _ComponentNavCard(
+            icon: Icons.format_size,
+            title: 'AutoSizeText',
+            subtitle: '自动缩放、预设字号、步进粒度、单词折行、溢出替换与回调、分组字号同步',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AutoSizeTextPage()),
+            ),
+          ),
+          _ComponentNavCard(
+            icon: Icons.text_fields,
+            title: 'AutoSizeTextField & FormField',
+            subtitle: '自适应字号输入框、自适应宽度、前缀后缀、预设字号、溢出替换与表单校验',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AutoSizeTextFieldPage(),
+              ),
+            ),
+          ),
+          _ComponentNavCard(
+            icon: Icons.view_carousel,
+            title: 'CarouselSlider',
+            subtitle: '无限轮播、居中放大(scale/height/zoom)、自动播放、横竖方向、控制器跳转与 Builder',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CarouselSliderPage(),
+              ),
+            ),
+          ),
+          _ComponentNavCard(
+            icon: Icons.style,
+            title: 'CardSwiper',
+            subtitle: 'DEFAULT/STACK/TINDER/CUSTOM 布局、分页器与动效指示器、控制按钮、缩放淡入',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const CardSwiperPage()),
+            ),
+          ),
+          _ComponentNavCard(
+            icon: Icons.candlestick_chart,
+            title: 'KChartPlus & DepthChart',
+            subtitle: '蜡烛图/分时线、主图(MA/EMA/BOLL/SAR)与副图(MACD/KDJ/RSI/WR/CCI)、深度图',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const KChartPlusPage()),
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  Column _buildContent() {
-    return Column(
-      children: <Widget>[
-        _buildSettings(),
-        Padding(
-          key: const Key('showMore'),
-          padding: const EdgeInsets.all(16),
-          child: ReadMoreText(
-            'Flutter is Google’s mobile UI open source framework to build high-quality native (super fast) interfaces for iOS and Android apps with the unified codebase.😊😊😊',
-            trimMode: _trimMode,
-            trimLines: _trimLines,
-            trimLength: _trimLength,
-            preDataText: 'AMANDA',
-            preDataTextStyle: const TextStyle(fontWeight: FontWeight.w500),
-            style: const TextStyle(color: Colors.black),
-            colorClickableText: Colors.pink,
-            trimCollapsedText: '...Show more',
-            trimExpandedText: ' show less',
-          ),
-        ),
-        const Divider(color: Color(0xFF167F67)),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: ReadMoreText(
-            'Flutter(https://flutter.dev/) has its own UI components, along with an engine to render them on both the <@123> and <@456> platforms <@999> http://google.com #read_more. Most of those UI components, right out of the box, conform to the guidelines of #Material Design.😊😊😊',
-            trimMode: _trimMode,
-            trimLines: _trimLines,
-            trimLength: _trimLength,
-            style: const TextStyle(color: Colors.black),
-            colorClickableText: Colors.pink,
-            trimCollapsedText: '...Expand',
-            trimExpandedText: ' Collapse ',
-            annotations: [
-              // URL
-              Annotation(
-                regExp: RegExp(
-                  r'(?:(?:https?|ftp)://)?[\w/\-?=%.]+\.[\w/\-?=%.]+',
-                ),
-                spanBuilder:
-                    ({required String text, required TextStyle textStyle}) {
-                      return TextSpan(
-                        text: text,
-                        style: textStyle.copyWith(
-                          decoration: TextDecoration.underline,
-                          color: Colors.green,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => _showMessage(text),
-                      );
-                    },
-              ),
-              // Mention
-              Annotation(
-                regExp: RegExp(r'<@(\d+)>'),
-                spanBuilder:
-                    ({required String text, required TextStyle textStyle}) {
-                      final user =
-                          userMap[int.tryParse(
-                            text.substring(2, text.length - 1),
-                          )];
-
-                      if (user == null) {
-                        return TextSpan(
-                          text: '@unknown user',
-                          style: textStyle.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => _showMessage('User not found'),
-                        );
-                      }
-
-                      return TextSpan(
-                        text: '@$user',
-                        style: textStyle.copyWith(
-                          decoration: TextDecoration.underline,
-                          color: Colors.redAccent,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => _showMessage('@$user'),
-                        children: [
-                          if (user == 'iOS') const TextSpan(text: 'Extra'),
-                        ],
-                      );
-                    },
-              ),
-              // Hashtag
-              Annotation(
-                // Test: non capturing group should work also
-                regExp: RegExp('#(?:[a-zA-Z0-9_]+)'),
-                spanBuilder:
-                    ({required String text, required TextStyle textStyle}) {
-                      return TextSpan(
-                        text: text,
-                        style: textStyle.copyWith(
-                          color: Colors.blueAccent,
-                          height: 1.5,
-                          letterSpacing: 5,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => _showMessage(text),
-                      );
-                    },
-              ),
-            ],
-          ),
-        ),
-        const Divider(color: Color(0xFF167F67)),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: ReadMoreText(
-            'The Flutter framework builds its layout via the composition of widgets, everything that you construct programmatically is a widget and these are compiled together to create the user interface. 😊😊😊',
-            trimMode: _trimMode,
-            trimLines: _trimLines,
-            trimLength: _trimLength,
-            isCollapsed: isCollapsed,
-            style: const TextStyle(color: Colors.black),
-            colorClickableText: Colors.pink,
-            trimCollapsedText: '...Read more',
-            trimExpandedText: ' Less',
-          ),
-        ),
-        ValueListenableBuilder(
-          valueListenable: isCollapsed,
-          builder: (context, value, child) {
-            return Center(
-              child: ElevatedButton(
-                onPressed: () => isCollapsed.value = !isCollapsed.value,
-                child: Text('is collapsed: $value'),
-              ),
-            );
-          },
-        ),
-        const Divider(color: Color(0xFF167F67)),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          // Rich version
-          child: ReadMoreText.rich(
-            TextSpan(
-              style: const TextStyle(color: Colors.black),
-              children: [
-                const TextSpan(text: 'The '),
-                const TextSpan(
-                  text: 'Flutter framework ',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    letterSpacing: 5,
-                  ),
-                ),
-                const TextSpan(
-                  text: 'builds its layout via the composition of ',
-                ),
-                TextSpan(
-                  text: 'widgets, ',
-                  style: const TextStyle(color: Colors.green),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () => _showMessage('Widgets tapped!'),
-                ),
-                const TextSpan(
-                  text: 'everything that you construct programmatically is a widget and these are compiled together to create the user interface.😊😊😊',
-                ),
-              ],
-            ),
-            style: TextStyle(inherit: false),
-            trimMode: _trimMode,
-            trimLines: _trimLines,
-            trimLength: _trimLength,
-            colorClickableText: Colors.blueAccent,
-            trimCollapsedText: '...Read more',
-            trimExpandedText: ' Less',
-          ),
-        ),
-        const Divider(color: Color(0xFF167F67)),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: ReadMoreText(
-            '😊' * 200,
-            trimMode: _trimMode,
-            trimLines: _trimLines,
-            trimLength: _trimLength,
-            colorClickableText: Colors.blueAccent,
-            trimCollapsedText: '...Read more',
-            trimExpandedText: ' Less',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _buildSettings() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Trim Mode'),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: SegmentedButton<TrimMode>(
-            segments: const [
-              ButtonSegment<TrimMode>(
-                value: TrimMode.length,
-                label: Text('Length'),
-              ),
-              ButtonSegment<TrimMode>(
-                value: TrimMode.line,
-                label: Text('Line'),
-              ),
-            ],
-            selected: <TrimMode>{_trimMode},
-            onSelectionChanged: (Set<TrimMode> newSelection) {
-              setState(() {
-                _trimMode = newSelection.first;
-              });
-            },
-          ),
-        ),
-        if (_trimMode == TrimMode.length)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove),
-                onPressed: _decrementTrimLength,
-              ),
-              Text('$_trimLength'),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: _incrementTrimLength,
-              ),
-            ],
-          ),
-        if (_trimMode == TrimMode.line)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove),
-                onPressed: _decrementTrimLines,
-              ),
-              Text('$_trimLines'),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: _incrementTrimLines,
-              ),
-            ],
-          ),
-      ],
-    );
-  }
 }
 
-class DraggableDivider extends StatefulWidget {
-  const DraggableDivider({super.key, required this.child});
+class _ComponentNavCard extends StatelessWidget {
+  const _ComponentNavCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
-  final Widget child;
-
-  @override
-  State<DraggableDivider> createState() => _DraggableDividerState();
-}
-
-class _DraggableDividerState extends State<DraggableDivider> {
-  final double dividerWidth = 10;
-  late double _leftWidth;
-  final double _minWidth = 20;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    setState(() {
-      _leftWidth = screenWidth - _minWidth - dividerWidth;
-    });
-  }
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(width: _leftWidth, child: widget.child),
-        GestureDetector(
-          onHorizontalDragUpdate: (details) {
-            setState(() {
-              final newWidth = _leftWidth + details.delta.dx;
-              final screenWidth = MediaQuery.of(context).size.width;
+    final colorScheme = Theme.of(context).colorScheme;
 
-              if (newWidth >= _minWidth &&
-                  (screenWidth - newWidth - dividerWidth) >= _minWidth) {
-                _leftWidth = newWidth;
-              }
-            });
-          },
-          child: Container(color: Colors.grey, width: 10),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+          child: Icon(icon),
         ),
-        const Expanded(child: Center(child: VerticalText('Drag Test'))),
-      ],
-    );
-  }
-}
-
-class VerticalText extends StatelessWidget {
-  const VerticalText(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: text
-          .split('')
-          .map((letter) => Text(letter, textAlign: TextAlign.center))
-          .toList(),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
     );
   }
 }
